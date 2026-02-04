@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Milestone - LoveLine</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&family=Dancing+Script:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/forms.css">
+
+    <!-- JavaScript Files -->
+    <script src="js/storage.js"></script>
+    <script src="js/form-handler.js"></script>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="assets/icons/favicon.ico">
+</head>
+
+<body>
+    <!-- Navigation Header -->
+    <header class="main-header">
+        <div class="container">
+            <div class="logo-container">
+                <i class="fas fa-heart logo-icon"></i>
+                <h1 class="logo-text">LoveLine</h1>
+            </div>
+
+            <nav class="main-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="index.html">
+                            <i class="fas fa-home"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Timeline</span>
+                        </a>
+                    </li>
+                    <li class="nav-item active">
+                        <a href="add-milestone.html">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Add Milestone</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#">
+                            <i class="fas fa-bell"></i>
+                            <span>Reminders</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="settings.html">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="user-profile">
+                <div class="avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Form Content -->
+    <main class="form-container">
+        <div class="container">
+            <div class="form-header">
+                <a href="index.html" class="back-link">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Dashboard
+                </a>
+                <h1><i class="fas fa-heart-circle-plus"></i> Add New Milestone</h1>
+                <p class="form-subtitle">Capture your special moments and celebrate your journey together</p>
+            </div>
+
+            <div class="form-card">
+                <form id="milestoneForm" enctype="multipart/form-data">
+                    <!-- Hidden ID field for editing -->
+                    <input type="hidden" id="milestoneId" name="id">
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="title">
+                                <i class="fas fa-heading"></i> Title *
+                            </label>
+                            <input type="text" id="title" name="title" required maxlength="100"
+                                placeholder="e.g., First Date, Engagement, Anniversary Trip">
+                            <small class="char-count">0/100 characters</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="date">
+                                <i class="fas fa-calendar-day"></i> Date *
+                            </label>
+                            <input type="date" id="date" name="date" required max="2025-12-31">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="category">
+                                <i class="fas fa-tag"></i> Category *
+                            </label>
+                            <select id="category" name="category" required>
+                                <option value="">Select a category</option>
+                                <option value="romance">💖 Romance</option>
+                                <option value="travel">✈️ Travel</option>
+                                <option value="commitment">💍 Commitment</option>
+                                <option value="achievement">🏆 Achievement</option>
+                                <option value="celebration">🎉 Celebration</option>
+                                <option value="first">⭐ First Times</option>
+                                <option value="growth">🌱 Growth</option>
+                                <option value="other">🔮 Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="significance">
+                                <i class="fas fa-star"></i> Significance Level
+                            </label>
+                            <div class="significance-options">
+                                <label class="significance-option low">
+                                    <input type="radio" name="significance" value="low">
+                                    <span class="option-content">
+                                        <i class="fas fa-star"></i>
+                                        <span>Low</span>
+                                    </span>
+                                </label>
+                                <label class="significance-option medium">
+                                    <input type="radio" name="significance" value="medium" checked>
+                                    <span class="option-content">
+                                        <i class="fas fa-star"></i>
+                                        <span>Medium</span>
+                                    </span>
+                                </label>
+                                <label class="significance-option high">
+                                    <input type="radio" name="significance" value="high">
+                                    <span class="option-content">
+                                        <i class="fas fa-star"></i>
+                                        <span>High</span>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">
+                            <i class="fas fa-align-left"></i> Description
+                        </label>
+                        <textarea id="description" name="description" rows="5" maxlength="1000"
+                            placeholder="Tell the story of this special moment... What made it memorable? How did you feel?"></textarea>
+                        <small class="char-count">0/1000 characters</small>
+                    </div>
+
+                    <!-- Photo Upload Section -->
+                    <div class="form-group">
+                        <label for="photos">
+                            <i class="fas fa-images"></i> Photos
+                        </label>
+                        <div class="photo-upload-area" id="photoUploadArea">
+                            <div class="upload-prompt">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Drag & drop photos here or click to browse</p>
+                                <small>Supports JPG, PNG, GIF (Max 5MB each)</small>
+                            </div>
+                            <input type="file" id="photos" name="photos" accept="image/*" multiple
+                                style="display: none;">
+                        </div>
+                        <div class="photo-preview" id="photoPreview">
+                            <!-- Preview images will appear here -->
+                        </div>
+                    </div>
+
+                    <!-- Location -->
+                    <div class="form-group">
+                        <label for="location">
+                            <i class="fas fa-map-marker-alt"></i> Location
+                        </label>
+                        <input type="text" id="location" name="location" placeholder="Where did this happen?">
+                    </div>
+
+                    <!-- Tags -->
+                    <div class="form-group">
+                        <label for="tags">
+                            <i class="fas fa-tags"></i> Tags
+                        </label>
+                        <div class="tags-input-container">
+                            <input type="text" id="tagInput" placeholder="Add a tag and press Enter">
+                            <div class="tags-container" id="tagsContainer">
+                                <!-- Tags will appear here -->
+                            </div>
+                        </div>
+                        <small class="hint">Press Enter to add tags (e.g., #beach, #anniversary, #surprise)</small>
+                    </div>
+
+                    <!-- Reminder Toggle -->
+                    <div class="form-group reminder-toggle">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="setReminder" name="setReminder">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-text">
+                                <i class="fas fa-bell"></i>
+                                Set Reminder for Anniversary
+                            </span>
+                        </label>
+                        <small class="hint">Get notified when this date comes around each year</small>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" id="cancelBtn">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn-primary" id="saveBtn">
+                            <i class="fas fa-save"></i> Save Milestone
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Quick Add Suggestions -->
+            <div class="suggestions-card">
+                <h3><i class="fas fa-lightbulb"></i> Need Inspiration?</h3>
+                <div class="suggestions-grid">
+                    <button class="suggestion-item" data-template="first-date">
+                        <i class="fas fa-heart"></i>
+                        <span>First Date</span>
+                    </button>
+                    <button class="suggestion-item" data-template="anniversary">
+                        <i class="fas fa-gift"></i>
+                        <span>Anniversary</span>
+                    </button>
+                    <button class="suggestion-item" data-template="trip">
+                        <i class="fas fa-plane"></i>
+                        <span>First Trip</span>
+                    </button>
+                    <button class="suggestion-item" data-template="met-parents">
+                        <i class="fas fa-users"></i>
+                        <span>Met Parents</span>
+                    </button>
+                    <button class="suggestion-item" data-template="moved-in">
+                        <i class="fas fa-home"></i>
+                        <span>Moved In</span>
+                    </button>
+                    <button class="suggestion-item" data-template="surprise">
+                        <i class="fas fa-surprise"></i>
+                        <span>Surprise</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Confirmation Modal -->
+    <div class="modal" id="confirmationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-check-circle"></i> Milestone Saved!</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Your special moment has been saved successfully.</p>
+                <div class="success-animation">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <p>What would you like to do next?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="viewMilestoneBtn">
+                    <i class="fas fa-eye"></i> View Milestone
+                </button>
+                <button class="btn-primary" id="addAnotherBtn">
+                    <i class="fas fa-plus"></i> Add Another
+                </button>
+                <button class="btn-text" id="goHomeBtn">
+                    <i class="fas fa-home"></i> Go to Dashboard
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+
+</html>

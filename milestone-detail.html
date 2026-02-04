@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Milestone Details - LoveLine</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&family=Dancing+Script:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Lightbox CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css">
+
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/detail.css">
+
+    <!-- JavaScript Files -->
+    <script src="js/storage.js"></script>
+    <script src="js/detail-handler.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"></script>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="assets/icons/favicon.ico">
+</head>
+
+<body>
+    <!-- Navigation Header -->
+    <header class="main-header">
+        <div class="container">
+            <div class="logo-container">
+                <i class="fas fa-heart logo-icon"></i>
+                <h1 class="logo-text">LoveLine</h1>
+            </div>
+
+            <nav class="main-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="index.html">
+                            <i class="fas fa-home"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Timeline</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="add-milestone.html">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Add Milestone</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#">
+                            <i class="fas fa-bell"></i>
+                            <span>Reminders</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="settings.html">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="user-profile">
+                <div class="avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Milestone Detail Container -->
+    <main class="detail-container">
+        <div class="container">
+            <!-- Back Navigation -->
+            <div class="back-nav">
+                <a href="index.html" class="back-link">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Dashboard
+                </a>
+                <div class="detail-actions">
+                    <button class="btn-icon" id="editBtn">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="btn-icon" id="deleteBtn">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                    <button class="btn-icon" id="shareBtn">
+                        <i class="fas fa-share-alt"></i> Share
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div class="loading-state" id="loadingState">
+                <i class="fas fa-heartbeat fa-spin"></i>
+                <p>Loading your special moment...</p>
+            </div>
+
+            <!-- Milestone Detail Card -->
+            <div class="detail-card" id="detailCard" style="display: none;">
+                <!-- Header Section -->
+                <div class="detail-header">
+                    <div class="detail-date">
+                        <div class="date-icon">
+                            <i class="fas fa-calendar-heart"></i>
+                        </div>
+                        <div class="date-info">
+                            <div class="date-day" id="dateDay">15</div>
+                            <div class="date-month-year">
+                                <span class="date-month" id="dateMonth">August</span>
+                                <span class="date-year" id="dateYear">2020</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-main-info">
+                        <h1 id="milestoneTitle">First Date</h1>
+                        <div class="detail-meta">
+                            <span class="category-badge" id="milestoneCategory">
+                                <i class="fas fa-heart"></i>
+                                <span>Romance</span>
+                            </span>
+                            <span class="significance-badge" id="milestoneSignificance">
+                                <i class="fas fa-star"></i>
+                                <span>High Importance</span>
+                            </span>
+                            <span class="days-ago" id="daysAgo">1,235 days ago</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content Section -->
+                <div class="detail-content">
+                    <!-- Left Column: Description & Details -->
+                    <div class="detail-left">
+                        <!-- Description -->
+                        <div class="detail-section">
+                            <h2><i class="fas fa-align-left"></i> The Story</h2>
+                            <div class="description-text" id="milestoneDescription">
+                                Our first date at that little Italian restaurant downtown. I was so nervous but you made
+                                me feel so comfortable. We talked for hours and didn't even notice the restaurant was
+                                closing. Remember how we walked through the park afterwards and watched the stars?
+                            </div>
+                        </div>
+
+                        <!-- Location -->
+                        <div class="detail-section" id="locationSection" style="display: none;">
+                            <h2><i class="fas fa-map-marker-alt"></i> Location</h2>
+                            <div class="location-info">
+                                <i class="fas fa-map-pin"></i>
+                                <span id="milestoneLocation">La Trattoria Restaurant, Downtown</span>
+                            </div>
+                            <div class="map-placeholder" id="mapPlaceholder">
+                                <!-- Map would go here in a real app -->
+                                <img src="https://via.placeholder.com/600x200/e8f4f8/2C3E50?text=Map+Location"
+                                    alt="Map Placeholder">
+                            </div>
+                        </div>
+
+                        <!-- Tags -->
+                        <div class="detail-section" id="tagsSection" style="display: none;">
+                            <h2><i class="fas fa-tags"></i> Tags</h2>
+                            <div class="tags-container" id="detailTags">
+                                <!-- Tags will be populated here -->
+                            </div>
+                        </div>
+
+                        <!-- Stats -->
+                        <div class="detail-section">
+                            <h2><i class="fas fa-chart-line"></i> Milestone Stats</h2>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <i class="fas fa-clock"></i>
+                                    <div class="stat-info">
+                                        <div class="stat-value" id="yearsTogether">3 years</div>
+                                        <div class="stat-label">Together at this point</div>
+                                    </div>
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-calendar-star"></i>
+                                    <div class="stat-info">
+                                        <div class="stat-value" id="nextAnniversary">42 days</div>
+                                        <div class="stat-label">Until next anniversary</div>
+                                    </div>
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-images"></i>
+                                    <div class="stat-info">
+                                        <div class="stat-value" id="photoCount">5 photos</div>
+                                        <div class="stat-label">Memories captured</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Photos -->
+                    <div class="detail-right">
+                        <!-- Photo Gallery -->
+                        <div class="detail-section">
+                            <h2><i class="fas fa-images"></i> Photo Gallery</h2>
+                            <div class="gallery-container">
+                                <div class="gallery-grid" id="galleryGrid">
+                                    <!-- Photos will be loaded here -->
+                                    <div class="no-photos" id="noPhotos">
+                                        <i class="fas fa-camera"></i>
+                                        <p>No photos for this milestone</p>
+                                        <button class="btn-text" id="addPhotosBtn">
+                                            <i class="fas fa-plus"></i> Add Photos
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Gallery Navigation -->
+                                <div class="gallery-nav" id="galleryNav" style="display: none;">
+                                    <button class="gallery-nav-btn" id="prevPhoto">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </button>
+                                    <div class="gallery-counter">
+                                        <span id="currentPhoto">1</span> of <span id="totalPhotos">5</span>
+                                    </div>
+                                    <button class="gallery-nav-btn" id="nextPhoto">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Related Milestones -->
+                        <div class="detail-section">
+                            <h2><i class="fas fa-link"></i> Related Moments</h2>
+                            <div class="related-milestones" id="relatedMilestones">
+                                <!-- Related milestones will be loaded here -->
+                                <div class="empty-related">
+                                    <p>No related milestones found</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Memory Jar -->
+                        <div class="detail-section memory-jar">
+                            <h2><i class="fas fa-jar"></i> Memory Jar</h2>
+                            <div class="memory-input">
+                                <textarea id="memoryNote"
+                                    placeholder="Add a memory or thought about this moment..."></textarea>
+                                <button class="btn-primary" id="saveMemoryBtn">
+                                    <i class="fas fa-plus"></i> Add to Jar
+                                </button>
+                            </div>
+                            <div class="memories-list" id="memoriesList">
+                                <!-- Memories will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Actions -->
+                <div class="detail-footer">
+                    <div class="footer-info">
+                        <div class="created-info">
+                            <i class="fas fa-clock"></i>
+                            <span>Created: <span id="createdDate">August 15, 2020</span></span>
+                        </div>
+                        <div class="updated-info">
+                            <i class="fas fa-history"></i>
+                            <span>Last updated: <span id="updatedDate">June 10, 2023</span></span>
+                        </div>
+                    </div>
+
+                    <div class="footer-actions">
+                        <button class="btn-secondary" id="printBtn">
+                            <i class="fas fa-print"></i> Print
+                        </button>
+                        <button class="btn-secondary" id="exportBtn">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                        <button class="btn-primary" id="celebrateBtn">
+                            <i class="fas fa-champagne-glasses"></i> Celebrate This Day!
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div class="error-state" id="errorState" style="display: none;">
+                <i class="fas fa-heart-crack"></i>
+                <h2>Milestone Not Found</h2>
+                <p>The milestone you're looking for doesn't exist or has been removed.</p>
+                <a href="index.html" class="btn-primary">
+                    <i class="fas fa-home"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Confirmation Modal -->
+    <div class="modal" id="confirmationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-exclamation-triangle"></i> Confirm Deletion</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this milestone?</p>
+                <p class="warning-text">This action cannot be undone. All photos and memories associated with this
+                    milestone will be permanently deleted.</p>
+                <div class="milestone-preview" id="deletePreview">
+                    <!-- Milestone info will be shown here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelDeleteBtn">
+                    Cancel
+                </button>
+                <button class="btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash"></i> Delete Forever
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lightbox Modal -->
+    <div class="lightbox-modal" id="lightboxModal">
+        <div class="lightbox-content">
+            <button class="lightbox-close" id="lightboxClose">&times;</button>
+            <button class="lightbox-nav prev" id="lightboxPrev">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="lightbox-image-container">
+                <img id="lightboxImage" src="" alt="">
+                <div class="lightbox-info">
+                    <div class="lightbox-title" id="lightboxTitle"></div>
+                    <div class="lightbox-date" id="lightboxDate"></div>
+                </div>
+            </div>
+            <button class="lightbox-nav next" id="lightboxNext">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+
+
+</body>
+
+</html>

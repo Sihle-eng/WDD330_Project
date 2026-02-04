@@ -1,0 +1,22 @@
+{
+    "suggestedMilestones": [
+        {
+            "title": "First Date",
+            "category": "romance",
+            "description": "The day you first went out together",
+            "icon": "fa-heart"
+        },
+        {
+            "title": "First Trip Together",
+            "category": "travel",
+            "description": "Your first vacation or getaway",
+            "icon": "fa-plane"
+        },
+        {
+            "title": "Moved In Together",
+            "category": "commitment",
+            "description": "Started living together",
+            "icon": "fa-home"
+        }
+    ]
+}

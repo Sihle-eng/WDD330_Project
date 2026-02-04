@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LoveLine - Relationship Milestone Tracker</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&family=Dancing+Script:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
+
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/timeline.css">
+    <link rel="stylesheet" href="css/responsive.css">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="assets/icons/favicon.ico">
+</head>
+
+<body>
+    <!-- Navigation Header -->
+    <header class="main-header">
+        <div class="container">
+            <div class="logo-container">
+                <i class="fas fa-heart logo-icon"></i>
+                <h1 class="logo-text">LoveLine</h1>
+                <span class="tagline">Your Relationship Journey</span>
+            </div>
+
+            <nav class="main-nav">
+                <ul class="nav-list">
+                    <li class="nav-item active">
+                        <a href="index.html">
+                            <i class="fas fa-home"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Timeline</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="add-milestone.html">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Add Milestone</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#">
+                            <i class="fas fa-bell"></i>
+                            <span>Reminders</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="settings.html">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="user-profile">
+                <div class="avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dashboard Content -->
+    <main class="dashboard-container">
+        <div class="container">
+            <!-- Welcome Section -->
+            <section class="welcome-section">
+                <div class="welcome-card">
+                    <h2><i class="fas fa-heart"></i> Welcome Back, Lovebirds!</h2>
+                    <p>You've been together for <span class="highlight">1,235 days</span></p>
+                    <div class="next-anniversary">
+                        <i class="fas fa-gift"></i>
+                        <span>Next anniversary in: <strong class="countdown">42 days</strong></span>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-star"></i>
+                        <h3>48</h3>
+                        <p>Milestones</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-camera"></i>
+                        <h3>156</h3>
+                        <p>Photos</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-calendar-check"></i>
+                        <h3>5</h3>
+                        <p>Upcoming</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-trophy"></i>
+                        <h3>12</h3>
+                        <p>Achievements</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Search & Filter Section -->
+            <section class="search-section">
+                <div class="container">
+                    <div class="search-container">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="searchInput" placeholder="Search milestones, tags, or descriptions...">
+                            <button class="btn-icon" id="clearSearch">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+            
+                        <div class="filter-controls">
+                            <div class="filter-group">
+                                <label for="categoryFilter">
+                                    <i class="fas fa-filter"></i> Category
+                                </label>
+                                <select id="categoryFilter">
+                                    <option value="">All Categories</option>
+                                    <option value="romance">💖 Romance</option>
+                                    <option value="travel">✈️ Travel</option>
+                                    <option value="commitment">💍 Commitment</option>
+                                    <option value="achievement">🏆 Achievement</option>
+                                    <option value="celebration">🎉 Celebration</option>
+                                    <option value="first">⭐ First Times</option>
+                                    <option value="growth">🌱 Growth</option>
+                                    <option value="other">🔮 Other</option>
+                                </select>
+                            </div>
+            
+                            <div class="filter-group">
+                                <label for="dateFilter">
+                                    <i class="fas fa-calendar"></i> Date Range
+                                </label>
+                                <select id="dateFilter">
+                                    <option value="all">All Time</option>
+                                    <option value="year">This Year</option>
+                                    <option value="month">This Month</option>
+                                    <option value="week">This Week</option>
+                                    <option value="custom">Custom Range</option>
+                                </select>
+                            </div>
+            
+                            <div class="filter-group">
+                                <label for="sortFilter">
+                                    <i class="fas fa-sort"></i> Sort By
+                                </label>
+                                <select id="sortFilter">
+                                    <option value="date-desc">Date (Newest)</option>
+                                    <option value="date-asc">Date (Oldest)</option>
+                                    <option value="title">Title A-Z</option>
+                                    <option value="significance">Significance</option>
+                                </select>
+                            </div>
+            
+                            <button class="btn-secondary" id="applyFiltersBtn">
+                                <i class="fas fa-check"></i> Apply Filters
+                            </button>
+            
+                            <button class="btn-text" id="resetFiltersBtn">
+                                <i class="fas fa-undo"></i> Reset
+                            </button>
+                        </div>
+            
+                        <!-- Custom Date Range (Hidden by default) -->
+                        <div class="custom-date-range" id="customDateRange" style="display: none;">
+                            <div class="date-inputs">
+                                <div class="date-input">
+                                    <label>From:</label>
+                                    <input type="date" id="dateFrom">
+                                </div>
+                                <div class="date-input">
+                                    <label>To:</label>
+                                    <input type="date" id="dateTo">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <!-- Search Results -->
+                    <div class="search-results" id="searchResults" style="display: none;">
+                        <div class="results-header">
+                            <h3 id="resultsCount">0 Results</h3>
+                            <button class="btn-text" id="closeResults">
+                                <i class="fas fa-times"></i> Close Results
+                            </button>
+                        </div>
+                        <div class="results-grid" id="resultsGrid">
+                            <!-- Search results will appear here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Timeline Preview -->
+            <section class="timeline-preview">
+                <div class="section-header">
+                    <h2><i class="fas fa-stream"></i> Recent Milestones</h2>
+                    <a href="#" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="timeline-container" id="timeline-preview">
+                    <!-- Timeline items will be populated by JavaScript -->
+                    <div class="loading-timeline">
+                        <i class="fas fa-heartbeat fa-spin"></i>
+                        <p>Loading your love story...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Upcoming Milestones -->
+            <section class="upcoming-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-bell"></i> Upcoming Celebrations</h2>
+                </div>
+                <div class="upcoming-list" id="upcoming-list">
+                    <!-- Upcoming items will be populated by JavaScript -->
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-plus"></i>
+                        <p>No upcoming milestones. Add one to get started!</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Add Button -->
+            <button class="quick-add-btn" id="quickAddBtn">
+                <i class="fas fa-plus"></i>
+                <span>Add Milestone</span>
+            </button>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="container">
+            <p>Made with <i class="fas fa-heart"></i> for couples everywhere</p>
+            <p class="copyright">© 2024 LoveLine - Relationship Milestone Tracker</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Files -->
+    <script src="js/app.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/ui-components.js"></script>
+</body>
+
+</html>

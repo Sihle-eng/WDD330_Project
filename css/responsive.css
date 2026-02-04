@@ -1,0 +1,95 @@
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Tablet */
+@media (max-width: 992px) {
+    .container {
+        padding: 0 1rem;
+    }
+
+    .main-nav .nav-list {
+        gap: 1rem;
+    }
+
+    .nav-item a span {
+        font-size: 0.8rem;
+    }
+
+    .welcome-card {
+        text-align: center;
+    }
+
+    .next-anniversary {
+        justify-content: center;
+    }
+}
+
+/* Mobile */
+@media (max-width: 576px) {
+    .logo-text {
+        font-size: 1.8rem;
+    }
+
+    .tagline {
+        display: none;
+    }
+
+    .main-nav .nav-list {
+        gap: 0.5rem;
+    }
+
+    .nav-item a {
+        padding: 0.5rem 0.25rem;
+    }
+
+    .nav-item a i {
+        font-size: 1rem;
+    }
+
+    .nav-item a span {
+        display: none;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .timeline-container {
+        padding: 1rem;
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .view-all {
+        align-self: flex-end;
+    }
+}
+
+/* Large Desktop */
+@media (min-width: 1400px) {
+    .container {
+        max-width: 1320px;
+    }
+}
+
+/* Print Styles */
+@media print {
+
+    .main-header,
+    .quick-add-btn,
+    .main-footer {
+        display: none;
+    }
+
+    body {
+        background: white;
+    }
+
+    .dashboard-container {
+        padding: 0;
+    }
+}
