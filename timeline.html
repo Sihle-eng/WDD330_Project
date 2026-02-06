@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeline - LoveLine</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&family=Dancing+Script:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
+
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/timeline.css">
+
+    <!-- JavaScript Files -->
+    <script src="js/storage.js"></script>
+    <script src="./node_modules/chart.js/dist/chart.umd.js"></script>
+    <script src="js/timeline.js"></script>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="assets/icons/favicon.ico">
+</head>
+
+<body>
+    <!-- Navigation Header -->
+    <header class="main-header">
+        <div class="container">
+            <div class="logo-container">
+                <i class="fas fa-heart logo-icon"></i>
+                <h1 class="logo-text">LoveLine</h1>
+            </div>
+
+            <nav class="main-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="index.html">
+                            <i class="fas fa-home"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item active">
+                        <a href="timeline.html">
+                            <i class="fas fa-stream"></i>
+                            <span>Timeline</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="add-milestone.html">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Add Milestone</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#">
+                            <i class="fas fa-bell"></i>
+                            <span>Reminders</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="settings.html">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="user-profile">
+                <div class="avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Timeline Page Container -->
+    <main class="timeline-page">
+        <div class="container">
+            <!-- Timeline Header -->
+            <div class="timeline-header">
+                <div class="header-left">
+                    <h1><i class="fas fa-stream"></i> Your Love Timeline</h1>
+                    <p class="subtitle">Visualize your journey together through time</p>
+                </div>
+
+                <div class="header-right">
+                    <div class="timeline-stats">
+                        <div class="stat">
+                            <i class="fas fa-heart"></i>
+                            <span id="totalMilestonesCount">0</span>
+                            <small>Milestones</small>
+                        </div>
+                        <div class="stat">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span id="timeSpanYears">0</span>
+                            <small>Years</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline Controls -->
+            <div class="timeline-controls">
+                <!-- View Toggle -->
+                <div class="view-toggle">
+                    <button class="view-btn active" id="verticalViewBtn">
+                        <i class="fas fa-align-left"></i> Vertical
+                    </button>
+                    <button class="view-btn" id="horizontalViewBtn">
+                        <i class="fas fa-align-justify"></i> Horizontal
+                    </button>
+                </div>
+
+                <!-- Zoom Controls -->
+                <div class="zoom-controls">
+                    <button class="zoom-btn" id="zoomOutBtn" title="Zoom Out">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                    <div class="zoom-level">
+                        <span id="zoomLevel">100%</span>
+                    </div>
+                    <button class="zoom-btn" id="zoomInBtn" title="Zoom In">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                    <button class="zoom-btn" id="resetZoomBtn" title="Reset Zoom">
+                        <i class="fas fa-expand-alt"></i>
+                    </button>
+                </div>
+
+                <!-- Filter Controls -->
+                <div class="filter-controls">
+                    <div class="filter-dropdown">
+                        <button class="filter-btn" id="filterToggleBtn">
+                            <i class="fas fa-filter"></i>
+                            <span id="filterCount">All Categories</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="filter-dropdown-content" id="filterDropdown">
+                            <div class="filter-header">
+                                <h4>Filter by Category</h4>
+                                <button class="btn-text" id="selectAllBtn">Select All</button>
+                            </div>
+                            <div class="filter-options" id="categoryFilters">
+                                <!-- Category options will be populated by JavaScript -->
+                            </div>
+                            <div class="filter-actions">
+                                <button class="btn-secondary" id="applyFilterBtn">Apply</button>
+                                <button class="btn-text" id="clearFilterBtn">Clear</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn-icon" id="toggleSignificanceBtn" title="Show Significance">
+                        <i class="fas fa-star"></i>
+                    </button>
+
+                    <button class="btn-icon" id="togglePhotosBtn" title="Show Photos">
+                        <i class="fas fa-image"></i>
+                    </button>
+                </div>
+
+                <!-- Export/Print -->
+                <div class="export-controls">
+                    <button class="btn-secondary" id="printTimelineBtn">
+                        <i class="fas fa-print"></i> Print
+                    </button>
+                    <button class="btn-secondary" id="exportTimelineBtn">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </div>
+
+            <!-- Timeline Legend -->
+            <div class="timeline-legend">
+                <div class="legend-title">
+                    <i class="fas fa-key"></i> Legend
+                </div>
+                <div class="legend-items" id="timelineLegend">
+                    <!-- Legend items will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Timeline Container -->
+            <div class="timeline-container">
+                <!-- Vertical Timeline -->
+                <div class="timeline-vertical" id="verticalTimeline">
+                    <!-- Timeline will be rendered here by JavaScript -->
+                    <div class="empty-timeline" id="emptyTimeline">
+                        <i class="fas fa-heart"></i>
+                        <h3>Your Timeline is Empty</h3>
+                        <p>Start your love story by adding your first milestone!</p>
+                        <a href="add-milestone.html" class="btn-primary">
+                            <i class="fas fa-plus"></i> Add First Milestone
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Horizontal Timeline -->
+                <div class="timeline-horizontal" id="horizontalTimeline" style="display: none;">
+                    <!-- Horizontal timeline will be rendered here -->
+                </div>
+            </div>
+
+            <!-- Timeline Navigation -->
+            <div class="timeline-navigation">
+                <button class="nav-btn" id="scrollLeftBtn">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="timeline-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="timelineProgress"></div>
+                    </div>
+                    <div class="progress-labels">
+                        <span id="currentYear">2020</span>
+                        <span id="timelineRange">2020 - 2024</span>
+                    </div>
+                </div>
+                <button class="nav-btn" id="scrollRightBtn">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <!-- Year Navigation -->
+            <div class="year-navigation" id="yearNavigation">
+                <!-- Year buttons will be populated by JavaScript -->
+            </div>
+
+            <!-- Statistics Panel -->
+            <div class="stats-panel">
+                <div class="stats-header">
+                    <h3><i class="fas fa-chart-pie"></i> Timeline Insights</h3>
+                    <button class="btn-icon" id="toggleStatsBtn">
+                        <i class="fas fa-chevron-up"></i>
+                    </button>
+                </div>
+
+                <div class="stats-content" id="statsContent">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-calendar-star"></i>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="avgPerMonth">0</div>
+                                <div class="stat-label">Milestones per month</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-trophy"></i>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="busiestYear">-</div>
+                                <div class="stat-label">Busiest year</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="highSignificance">0</div>
+                                <div class="stat-label">High significance</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-images"></i>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="milestonesWithPhotos">0</div>
+                                <div class="stat-label">With photos</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Category Distribution Chart -->
+                    <div class="chart-container">
+                        <h4>Category Distribution</h4>
+                        <div class="chart" id="categoryChart">
+                            <canvas id="categoryChartCanvas"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Activity Chart -->
+                    <div class="chart-container">
+                        <h4>Monthly Activity</h4>
+                        <div class="chart" id="monthlyChart">
+                            <canvas id="monthlyChartCanvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Milestone Quick View Modal -->
+    <div class="modal" id="quickViewModal">
+        <div class="modal-content timeline-modal">
+            <div class="modal-header">
+                <h3 id="quickViewTitle"></h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="quick-view-content" id="quickViewContent">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="closeQuickViewBtn">
+                    Close
+                </button>
+                <a href="" class="btn-primary" id="viewDetailsBtn">
+                    <i class="fas fa-eye"></i> View Details
+                </a>
+                <a href="" class="btn-secondary" id="editMilestoneBtn">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+
+</html>

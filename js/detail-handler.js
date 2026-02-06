@@ -133,17 +133,14 @@ const DetailHandler = {
 
         document.getElementById('noPhotos').style.display = 'none';
 
-        // Load photos from storage
-        this.state.photos = m.photoIds.map(photoId => {
-            // In a real app, you'd fetch from Storage.getPhotos()
-            // For now, we'll create placeholder data
-            return {
-                id: photoId,
-                url: `https://via.placeholder.com/400x400/e8f4f8/2C3E50?text=Photo+${photoId.substring(0, 4)}`,
-                title: m.title,
-                date: m.date
-            };
-        });
+        // Load actual photo objects from storage
+        const photos = Storage.getPhotosByMilestone(m.id);
+        this.state.photos = photos.map(photo => ({
+            id: photo.id,
+            url: photo.dataUrl || `https://via.placeholder.com/400x400/e8f4f8/2C3E50?text=Photo+${photo.id.substring(0, 4)}`,
+            title: m.title,
+            date: m.date
+        }));
 
         this.renderGallery();
     },
@@ -154,9 +151,12 @@ const DetailHandler = {
         galleryGrid.innerHTML = '';
 
         this.state.photos.forEach((photo, index) => {
-            const galleryItem = document.createElement('div');
+            const galleryItem = document.createElement('a');
             galleryItem.className = 'gallery-item';
             galleryItem.dataset.index = index;
+            galleryItem.href = photo.url;
+            galleryItem.setAttribute('data-lightbox', 'milestone-gallery');
+            galleryItem.setAttribute('data-title', photo.title || 'Photo');
 
             galleryItem.innerHTML = `
                 <img src="${photo.url}" alt="${photo.title}">
@@ -165,13 +165,13 @@ const DetailHandler = {
                 </div>
             `;
 
-            galleryItem.addEventListener('click', () => this.openLightbox(index));
             galleryGrid.appendChild(galleryItem);
         });
 
-        // Update gallery navigation
-        document.getElementById('galleryNav').style.display = 'flex';
-        document.getElementById('currentPhoto').textContent = '1';
+        // Hide custom gallery navigation if using Lightbox2
+        document.getElementById('galleryNav').style.display = 'none';
+        // Optionally update photo count
+        document.getElementById('currentPhoto').textContent = this.state.photos.length > 0 ? '1' : '0';
         document.getElementById('totalPhotos').textContent = this.state.photos.length;
 
         // Reset current photo index

@@ -1,5 +1,3 @@
-// ===== ENHANCED APP.JS WITH CRUD OPERATIONS =====
-
 document.addEventListener('DOMContentLoaded', function () {
     console.log('LoveLine - Relationship Milestone Tracker initialized');
 
@@ -784,3 +782,155 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add this to your existing DOMContentLoaded callback
     SearchFilter.init();
 });
+
+function updateTimelinePreview() {
+    const timelinePreview = document.getElementById('timeline-preview');
+    if (!timelinePreview) return;
+
+    const milestones = Storage.getAllMilestones();
+
+    if (milestones.length === 0) {
+        timelinePreview.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-heart"></i>
+                <p>Your love story begins here!</p>
+                <p class="hint">Add your first milestone to start tracking your journey</p>
+                <a href="add-milestone.html" class="btn-primary">
+                    <i class="fas fa-plus"></i> Add First Milestone
+                </a>
+            </div>
+        `;
+        return;
+    }
+
+    // Get recent milestones (last 5)
+    const recentMilestones = [...milestones]
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 5);
+
+    // Create a mini-timeline preview
+    timelinePreview.innerHTML = `
+        <div class="mini-timeline">
+            <div class="mini-timeline-line"></div>
+            <div class="mini-timeline-items">
+                ${recentMilestones.map((milestone, index) => {
+        const date = new Date(milestone.date);
+        const formattedDate = date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric'
+        });
+
+        const category = milestone.category || 'other';
+        const categoryColor = Timeline.categoryColors[category] || Timeline.categoryColors.other;
+
+        return `
+                        <div class="mini-timeline-item" data-milestone-id="${milestone.id}">
+                            <div class="mini-marker" style="border-color: ${categoryColor};"></div>
+                            <div class="mini-content">
+                                <div class="mini-date">${formattedDate}</div>
+                                <div class="mini-title">${milestone.title}</div>
+                                <div class="mini-category">${milestone.category || 'Other'}</div>
+                            </div>
+                        </div>
+                    `;
+    }).join('')}
+            </div>
+            
+            <div class="timeline-preview-actions">
+                <a href="timeline.html" class="btn-primary">
+                    <i class="fas fa-stream"></i> View Full Timeline
+                </a>
+            </div>
+        </div>
+    `;
+
+    // Add mini-timeline styles
+    const style = document.createElement('style');
+    style.textContent = `
+        .mini-timeline {
+            position: relative;
+            padding: 1rem 0;
+        }
+        
+        .mini-timeline-line {
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+        }
+        
+        .mini-timeline-items {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .mini-timeline-item {
+            position: relative;
+            margin-bottom: 1.5rem;
+            padding-left: 50px;
+        }
+        
+        .mini-marker {
+            position: absolute;
+            left: 15px;
+            top: 0;
+            width: 12px;
+            height: 12px;
+            background: white;
+            border: 2px solid var(--primary-color);
+            border-radius: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .mini-content {
+            background: white;
+            padding: 0.75rem;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .mini-content:hover {
+            transform: translateX(5px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .mini-date {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+        
+        .mini-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+        
+        .mini-category {
+            font-size: 0.85rem;
+            color: var(--primary-color);
+            background: rgba(231, 84, 128, 0.1);
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 20px;
+        }
+        
+        .timeline-preview-actions {
+            text-align: center;
+            margin-top: 2rem;
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Add click events to mini timeline items
+    document.querySelectorAll('.mini-timeline-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            const milestoneId = e.currentTarget.dataset.milestoneId;
+            window.location.href = `milestone-detail.html?id=${milestoneId}`;
+        });
+    });
+}

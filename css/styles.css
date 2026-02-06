@@ -305,8 +305,23 @@ a:hover {
     box-shadow: var(--shadow);
     min-height: 300px;
     display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
     align-items: center;
     justify-content: center;
+}
+.timeline-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+.timeline-container {
+    min-height: auto;
+}
+@media (max-width: 1280px) {
+    .timeline-container {
+        grid-template-columns: 1fr;
+    }
 }
 
 .loading-timeline {
@@ -691,6 +706,7 @@ a:hover {
     margin: 0.75rem 0;
     display: -webkit-box;
     -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
