@@ -934,3 +934,53 @@ function updateTimelinePreview() {
         });
     });
 }
+
+// ===== DASHBOARD COUNTDOWN INTEGRATION =====
+
+function updateDashboardCountdown() {
+    const countdownElement = document.querySelector('.next-anniversary .countdown');
+    if (!countdownElement) return;
+
+    const profile = Storage.getUserProfile();
+    if (!profile || !profile.anniversaryDate) return;
+
+    const anniversary = new Date(profile.anniversaryDate);
+    const nextAnniversary = Storage.getNextOccurrence(anniversary);
+    const today = new Date();
+    const diff = nextAnniversary - today;
+
+    if (diff <= 0) {
+        countdownElement.textContent = 'Today!';
+        countdownElement.style.color = 'var(--accent-color)';
+        countdownElement.style.animation = 'pulse 1s infinite';
+        return;
+    }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+    let displayText;
+    if (days > 0) {
+        displayText = `${days} day${days !== 1 ? 's' : ''}`;
+        if (days <= 7) {
+            displayText += `, ${hours} hour${hours !== 1 ? 's' : ''}`;
+        }
+    } else {
+        displayText = `${hours} hour${hours !== 1 ? 's' : ''}`;
+    }
+
+    countdownElement.textContent = displayText;
+
+    // Color coding based on proximity
+    if (days <= 7) {
+        countdownElement.style.color = 'var(--accent-color)';
+    } else if (days <= 30) {
+        countdownElement.style.color = 'var(--primary-color)';
+    }
+}
+
+// Update countdown every minute
+setInterval(updateDashboardCountdown, 60000);
+
+// Initialize on page load
+updateDashboardCountdown();

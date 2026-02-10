@@ -83,9 +83,21 @@ const FormHandler = {
 
     // Load photos for a milestone
     loadMilestonePhotos(photoIds) {
-        // For now, we'll store photo data in the milestone itself
-        // In a real app, you'd fetch from storage
-        this.formState.photos = photoIds.map(id => ({ id, url: `data:image/jpeg;base64,...` }));
+        // Fetch actual photo data from storage
+        this.formState.photos = photoIds
+            .map(id => {
+                const photo = Storage.getPhotoById(id);
+                if (photo && photo.dataUrl) {
+                    return {
+                        id: photo.id,
+                        url: photo.dataUrl,
+                        name: photo.name
+                    };
+                }
+                // fallback: skip if not found
+                return null;
+            })
+            .filter(photo => photo !== null);
         this.renderPhotoPreviews();
     },
 
@@ -122,7 +134,7 @@ const FormHandler = {
         // Date max validation
         const dateInput = document.getElementById('date');
         const today = new Date().toISOString().split('T')[0];
-        dateInput.max = '2025-12-31'; // Allow future dates up to 2025
+ // Allow future dates up to 2025
 
         // Modal buttons
         document.querySelector('.modal-close').addEventListener('click', () => this.hideModal());
@@ -315,7 +327,8 @@ const FormHandler = {
                 size: file.size,
                 type: file.type,
                 dataUrl: e.target.result,
-                uploadedAt: new Date().toISOString()
+                uploadedAt: new Date().toISOString(),
+                milestoneId: this.formState.milestoneId // Attach milestoneId
             };
 
             // Save to storage

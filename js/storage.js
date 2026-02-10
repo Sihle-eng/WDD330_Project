@@ -188,6 +188,11 @@ const Storage = {
     },
 
     // ===== PHOTO MANAGEMENT =====
+    // Get photo by ID
+    getPhotoById(photoId) {
+        const photos = this.getPhotos();
+        return photos.find(photo => photo.id === photoId) || null;
+    },
 
     savePhoto(photoData) {
         try {

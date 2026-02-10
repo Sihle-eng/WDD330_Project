@@ -230,6 +230,15 @@ const Timeline = {
         document.getElementById('highSignificance').textContent = this.state.statistics.highSignificance;
         document.getElementById('milestonesWithPhotos').textContent = this.state.statistics.milestonesWithPhotos;
 
+        // Update timeline range display
+        const rangeSpan = document.getElementById('timelineRange');
+        if (rangeSpan && this.state.milestones.length > 0) {
+            const dates = this.state.milestones.map(m => new Date(m.date));
+            const minYear = new Date(Math.min(...dates)).getFullYear();
+            const maxYear = new Date(Math.max(...dates)).getFullYear();
+            rangeSpan.textContent = `${minYear} - ${maxYear}`;
+        }
+
         // Update filter count
         const filterCount = document.getElementById('filterCount');
         const activeFilterCount = this.config.activeFilters.categories.length;
@@ -648,10 +657,7 @@ const Timeline = {
 
             timelineHTML += `
                 <div class="timeline-item" data-milestone-id="${milestone.id}">
-                    <div class="timeline-marker ${milestone.significance || 'medium'}" 
-                         style="border-color: ${categoryColor};"
-                         title="${milestone.title}">
-                    </div>
+                    <!-- timeline-marker removed -->
                     
                     <div class="timeline-content ${isLeftSide ? 'left' : 'right'}" 
                          style="border-left-color: ${categoryColor}; border-left-width: 4px;">
@@ -868,13 +874,7 @@ const Timeline = {
 
         // Milestone marker clicks
         document.querySelectorAll('.timeline-marker, .horizontal-marker').forEach(marker => {
-            marker.addEventListener('click', (e) => {
-                const milestoneItem = e.target.closest('.timeline-item, .horizontal-timeline-item');
-                if (milestoneItem) {
-                    const milestoneId = milestoneItem.dataset.milestoneId;
-                    this.showQuickView(milestoneId);
-                }
-            });
+            // timeline-marker click event removed
         });
 
         // Photo thumbnail clicks
@@ -931,14 +931,27 @@ const Timeline = {
 
         // Add photo if available
         if (milestone.photoIds && milestone.photoIds.length > 0) {
+            const photoUrl = milestone.photoIds[0]; // or however you store the uploaded photo
             contentHTML = `
-                <div class="quick-view-photo">
-                    <img src="https://via.placeholder.com/500x200/e8f4f8/2C3E50?text=Photo+Preview" alt="${milestone.title}">
-                </div>
-            ` + contentHTML;
+        <div class="quick-view-photo">
+            <img src="${photoUrl}" alt="${milestone.title}">
+        </div>
+    ` + contentHTML;
+        }
+        document.addEventListener('click', function (e) {
+            if (e.target.classList.contains('remove-photo')) {
+                e.preventDefault(); // stop default behavior
+                e.target.disabled = true; // visually freeze the button
+            }
+        });
+
+
+
+        const quickView = document.getElementById('quickViewContent');
+        if (quickView) {
+            quickView.innerHTML = contentHTML;
         }
 
-        document.getElementById('quickViewContent').innerHTML = contentHTML;
 
         // Update action buttons
         document.getElementById('viewDetailsBtn').href = `milestone-detail.html?id=${milestoneId}`;

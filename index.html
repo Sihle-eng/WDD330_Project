@@ -56,6 +56,12 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a href="countdown.html">
+                            <i class="fas fa-clock"></i>
+                            <span>Countdowns</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a href="#">
                             <i class="fas fa-bell"></i>
                             <span>Reminders</span>
@@ -116,19 +122,20 @@
                     </div>
                 </div>
             </section>
-            
+
             <!-- Search & Filter Section -->
             <section class="search-section">
                 <div class="container">
                     <div class="search-container">
                         <div class="search-box">
                             <i class="fas fa-search"></i>
-                            <input type="text" id="searchInput" placeholder="Search milestones, tags, or descriptions...">
+                            <input type="text" id="searchInput"
+                                placeholder="Search milestones, tags, or descriptions...">
                             <button class="btn-icon" id="clearSearch">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
-            
+
                         <div class="filter-controls">
                             <div class="filter-group">
                                 <label for="categoryFilter">
@@ -146,7 +153,7 @@
                                     <option value="other">🔮 Other</option>
                                 </select>
                             </div>
-            
+
                             <div class="filter-group">
                                 <label for="dateFilter">
                                     <i class="fas fa-calendar"></i> Date Range
@@ -159,7 +166,7 @@
                                     <option value="custom">Custom Range</option>
                                 </select>
                             </div>
-            
+
                             <div class="filter-group">
                                 <label for="sortFilter">
                                     <i class="fas fa-sort"></i> Sort By
@@ -171,16 +178,16 @@
                                     <option value="significance">Significance</option>
                                 </select>
                             </div>
-            
+
                             <button class="btn-secondary" id="applyFiltersBtn">
                                 <i class="fas fa-check"></i> Apply Filters
                             </button>
-            
+
                             <button class="btn-text" id="resetFiltersBtn">
                                 <i class="fas fa-undo"></i> Reset
                             </button>
                         </div>
-            
+
                         <!-- Custom Date Range (Hidden by default) -->
                         <div class="custom-date-range" id="customDateRange" style="display: none;">
                             <div class="date-inputs">
@@ -195,7 +202,7 @@
                             </div>
                         </div>
                     </div>
-            
+
                     <!-- Search Results -->
                     <div class="search-results" id="searchResults" style="display: none;">
                         <div class="results-header">
