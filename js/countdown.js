@@ -1,4 +1,6 @@
 // ===== SIMPLIFIED COUNTDOWN TIMER IMPLEMENTATION =====
+
+
 const CountdownManager = {
     // Configuration
     config: {
@@ -1273,4 +1275,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('pagehide', () => {
         CountdownManager.cleanup();
     });
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    confetti();
 });

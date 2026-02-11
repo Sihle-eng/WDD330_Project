@@ -936,16 +936,30 @@ function updateTimelinePreview() {
 }
 
 // ===== DASHBOARD COUNTDOWN INTEGRATION =====
+const AppStorage = {
+    getUserProfile: function () {
+        return JSON.parse(localStorage.getItem("userProfile"));
+    },
+    getNextOccurrence: function (date) {
+        const today = new Date();
+        const next = new Date(date);
+        next.setFullYear(today.getFullYear());
+        if (next < today) {
+            next.setFullYear(today.getFullYear() + 1);
+        }
+        return next;
+    }
+};
 
 function updateDashboardCountdown() {
     const countdownElement = document.querySelector('.next-anniversary .countdown');
     if (!countdownElement) return;
 
-    const profile = Storage.getUserProfile();
+    const profile = AppStorage.getUserProfile();
     if (!profile || !profile.anniversaryDate) return;
 
     const anniversary = new Date(profile.anniversaryDate);
-    const nextAnniversary = Storage.getNextOccurrence(anniversary);
+    const nextAnniversary = AppStorage.getNextOccurrence(anniversary);
     const today = new Date();
     const diff = nextAnniversary - today;
 
@@ -984,3 +998,27 @@ setInterval(updateDashboardCountdown, 60000);
 
 // Initialize on page load
 updateDashboardCountdown();
+
+document.getElementById('suggest-background').addEventListener('click', async function () {
+    const category = document.getElementById('milestone-category').value;
+    const query = getQueryFromCategory(category);
+    const imageData = await fetchUnsplashImage(query);
+
+    if (imageData) {
+        const preview = document.getElementById('image-preview');
+        preview.innerHTML = `
+      <img src="${imageData.urls.small}" alt="${imageData.alt}" />
+      <p>Photo by <a href="${imageData.authorLink}" target="_blank">${imageData.author}</a> on Unsplash</p>
+      <button id="apply-image">Apply as Background</button>
+    `;
+
+        document.getElementById('apply-image').addEventListener('click', function () {
+            // Save image data to milestone object
+            currentMilestone.backgroundImage = imageData.urls.regular;
+            currentMilestone.imageAttribution = `${imageData.author} on Unsplash`;
+            // Update UI
+            updateMilestoneBackground(currentMilestone);
+            cacheUnsplashImage(currentMilestone.id, imageData);
+        });
+    }
+});

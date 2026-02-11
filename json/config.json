@@ -1,8 +1,6 @@
 {
-    "apiKeys": {
-        "calendarific": "jssDPFnEw6b9aQCxE2yOECObbUPYoOlQ",
-        "unsplash": "keUYcMEaU8NU_K5-zgrqATPWKPqZIaJCuAKmaHS_NaI"
-    },
+    "unsplashAccessKey": "keUYcMEaU8NU_K5-zgrqATPWKPqZIaJCuAKmaHS_NaI",
+    "calendarificKey": "jssDPFnEw6b9aQCxE2yOECObbUPYoOlQ",
     "defaultCountry": "BW",
     "defaultTimezone": "Africa/Gaborone"
 }

@@ -14,15 +14,17 @@
         rel="stylesheet">
 
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
 
     <!-- CSS Files -->
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/forms.css">
+    <link rel="stylesheet" href="css/image-picker.css">
 
     <!-- JavaScript Files -->
     <script src="js/storage.js"></script>
     <script src="js/form-handler.js"></script>
+    <script type="module" src="js/image-picker.js"></script>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="assets/icons/favicon.ico">
@@ -117,7 +119,7 @@
                             <label for="date">
                                 <i class="fas fa-calendar-day"></i> Date *
                             </label>
-                            <input type="date" id="date" name="date" >
+                            <input type="date" id="date" name="date">
                         </div>
                     </div>
 
@@ -177,12 +179,34 @@
                             placeholder="Tell the story of this special moment... What made it memorable? How did you feel?"></textarea>
                         <small class="char-count">0/1000 characters</small>
                     </div>
+                    <!-- Add this section after your milestone description field -->
+                    <section class="image-picker-container" id="image-picker-section">
+                        <div class="image-picker-header">
+                            <h3 class="image-picker-title">🎨 Add a Background Image</h3>
+                            <button id="suggest-image-btn">
+                                <span class="icon">✨</span>
+                                Suggest Images
+                            </button>
+                        </div>
+
+                        <div id="image-suggestions-container">
+                            <!-- Images will be loaded here dynamically -->
+                            <p class="image-picker-help">
+                                Click "Suggest Images" to see background options based on your milestone.
+                            </p>
+                        </div>
+
+                        <!-- Hidden input to store selected image data -->
+                        <input type="hidden" id="selected-image-data" name="selectedImageData">
+                    </section>
+
 
                     <!-- Photo Upload Section -->
                     <div class="form-group">
                         <label for="photos">
                             <i class="fas fa-images"></i> Photos
                         </label>
+
                         <div class="photo-upload-area" id="photoUploadArea">
                             <div class="upload-prompt">
                                 <i class="fas fa-cloud-upload-alt"></i>
