@@ -1,3 +1,35 @@
+:root {
+    /* Primary colors based on the pink theme (#e75480) */
+    --primary-color: #e75480;
+    --primary-light: #f09bb7;
+    --primary-dark: #c43a60;
+    --secondary-color: #6c5ce7;
+    /* purple accent from back-link */
+    --accent-color: #f39c12;
+    /* gold/orange for high significance */
+
+    /* Text colors */
+    --text-primary: #2d3436;
+    --text-secondary: #636e72;
+    --text-light: #b2bec3;
+
+    /* UI colors */
+    --card-bg: #ffffff;
+    --border-color: #dfe6e9;
+
+    /* Border radii */
+    --radius: 16px;
+    --radius-sm: 8px;
+
+    /* Shadows */
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+* {
+    box-sizing: border-box;
+}
+
 .form-container {
     padding: 2rem 0;
     background: linear-gradient(135deg, #fff9fb 0%, #fef4f8 100%);
@@ -369,6 +401,7 @@ input[type="checkbox"]:checked+.toggle-slider::before {
 /* Form Actions */
 .form-actions {
     display: flex;
+    flex-direction: row;
     justify-content: flex-end;
     gap: 1rem;
     margin-top: 2rem;

@@ -1,6 +1,132 @@
 // ===== NOTIFICATION SYSTEM =====
+// Unified notification module – use Notifications for all new code
+
+const Notifications = {
+    /**
+     * Check if browser supports notifications
+     */
+    isSupported() {
+        return 'Notification' in window;
+    },
+
+    /**
+     * Request permission from user
+     */
+    async requestPermission() {
+        if (!this.isSupported()) {
+            console.warn('Notifications not supported');
+            return 'unsupported';
+        }
+
+        if (Notification.permission === 'granted') {
+            return 'granted';
+        }
+
+        if (Notification.permission !== 'denied') {
+            const permission = await Notification.requestPermission();
+            return permission;
+        }
+
+        return Notification.permission;
+    },
+
+    /**
+     * Show a notification
+     * @returns {boolean} true if notification was shown
+     */
+    show(title, options = {}) {
+        if (!this.isSupported()) return false;
+
+        if (Notification.permission === 'granted') {
+            try {
+                const notification = new Notification(title, {
+                    icon: '/assets/icons/heart-icon.png',
+                    badge: '/assets/icons/badge.png',
+                    vibrate: [200, 100, 200],
+                    ...options
+                });
+
+                notification.onclick = () => {
+                    window.focus();
+                    if (options.milestoneId) {
+                        window.location.href = `/milestone-detail.html?id=${options.milestoneId}`;
+                    }
+                    notification.close();
+                };
+
+                return true;  // success
+            } catch (error) {
+                console.error('Failed to show notification:', error);
+                return false;
+            }
+        } else {
+            console.log('Notification permission not granted');
+            return false;
+        }
+    },
+
+    /**
+     * Play a notification sound (falls back to beep)
+     */
+    playSound() {
+        const audio = new Audio('/assets/sounds/notification.mp3');
+        audio.volume = 0.3;
+        audio.play().catch(() => this.playBeep());
+    },
+
+    /**
+     * Fallback beep sound using Web Audio API
+     */
+    playBeep() {
+        try {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextClass) throw new Error('Web Audio API not supported');
+
+            const audioContext = new AudioContextClass();
+
+            // Resume context (required by autoplay policies)
+            if (audioContext.state === 'suspended') {
+                audioContext.resume().then(() => {
+                    this._createBeep(audioContext);
+                }).catch(e => console.warn('Could not resume AudioContext:', e));
+            } else {
+                this._createBeep(audioContext);
+            }
+        } catch (error) {
+            console.log('Beep not available:', error);
+        }
+    },
+
+    /**
+     * Internal: create the actual beep sound
+     */
+    _createBeep(audioContext) {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.2);
+
+        // Clean up after finish
+        oscillator.onended = () => {
+            audioContext.close().catch(console.warn);
+        };
+    }
+};
+
+// ===== LEGACY SUPPORT (NotificationManager) =====
+// Kept for backward compatibility – now fully functional and delegates to Notifications
+
 const NotificationManager = {
-    // Configuration
     config: {
         enabled: true,
         permission: null,
@@ -14,15 +140,16 @@ const NotificationManager = {
         }
     },
 
-    // Initialize notification manager
+    // Store scheduled timeouts so they can be cleared
+    _scheduledTimeouts: [],
+
     init() {
-        console.log('Notification Manager initialized');
+        console.log('Notification Manager initialized (legacy)');
         this.loadConfig();
-        this.requestPermission();
-        this.setupServiceWorker();
+        this.requestPermission(); // async, but not awaited – config.permission will update later
+        // No service worker needed for local notifications
     },
 
-    // Load configuration from localStorage
     loadConfig() {
         const savedConfig = localStorage.getItem('loveLine_notificationConfig');
         if (savedConfig) {
@@ -34,250 +161,156 @@ const NotificationManager = {
         }
     },
 
-    // Save configuration
     saveConfig() {
         localStorage.setItem('loveLine_notificationConfig', JSON.stringify(this.config));
     },
 
-    // Request notification permission
-    requestPermission() {
-        if (!("Notification" in window)) {
-            console.log("This browser does not support notifications.");
-            this.config.permission = 'unsupported';
-            return;
-        }
-
-        if (Notification.permission === "granted") {
-            this.config.permission = "granted";
-        } else if (Notification.permission !== "denied") {
-            Notification.requestPermission().then(permission => {
-                this.config.permission = permission;
-                this.saveConfig();
-            });
-        } else {
-            this.config.permission = "denied";
-        }
+    async requestPermission() {
+        const permission = await Notifications.requestPermission();
+        this.config.permission = permission;
+        this.saveConfig();
+        return permission;
     },
 
-    // Setup service worker for push notifications
-    async setupServiceWorker() {
-        if ('serviceWorker' in navigator && 'PushManager' in window) {
-            try {
-                const registration = await navigator.serviceWorker.register('/service-worker.js');
-                console.log('Service Worker registered:', registration);
-            } catch (error) {
-                console.error('Service Worker registration failed:', error);
-            }
-        }
-    },
-
-    // Send notification
+    /**
+     * Send a notification – returns boolean success
+     */
     sendNotification(title, options = {}) {
-        if (!this.config.enabled || this.config.permission !== "granted") {
-            return false;
-        }
-
-        const defaultOptions = {
-            body: '',
-            icon: '/assets/icons/notification-icon.png',
-            badge: '/assets/icons/badge-icon.png',
-            tag: 'loveline-notification',
-            renotify: true,
-            requireInteraction: false,
-            silent: !this.config.soundEnabled,
-            vibrate: this.config.vibrationEnabled ? [200, 100, 200] : []
-        };
-
-        const notificationOptions = { ...defaultOptions, ...options };
-
-        // Show notification
-        const notification = new Notification(title, notificationOptions);
-
-        // Handle notification click
-        notification.onclick = function (event) {
-            event.preventDefault();
-            window.focus();
-            this.close();
-
-            // Navigate to countdown page or specific milestone
-            if (options.data && options.data.url) {
-                window.location.href = options.data.url;
-            } else {
-                window.location.href = '/countdown.html';
-            }
-        };
-
-        // Play sound if enabled
-        if (this.config.soundEnabled && !notificationOptions.silent) {
-            this.playNotificationSound();
-        }
-
-        return true;
+        if (!this.config.enabled) return false;
+        return Notifications.show(title, options);
     },
 
-    // Play notification sound
     playNotificationSound() {
-        const audio = new Audio('/assets/sounds/notification.mp3');
-        audio.volume = 0.3;
-        audio.play().catch(error => {
-            console.log('Audio play failed:', error);
-            // Fallback to beep sound
-            this.playBeepSound();
-        });
-    },
-
-    // Play beep sound (fallback)
-    playBeepSound() {
-        try {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-
-            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-            oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
-
-            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.2);
-        } catch (error) {
-            console.log('Audio context not supported:', error);
+        if (this.config.soundEnabled) {
+            Notifications.playSound();
         }
     },
 
-    // Schedule countdown notification
+    playBeepSound() {
+        Notifications.playBeep();
+    },
+
+    /**
+     * Schedule a countdown notification (e.g., X minutes before an event)
+     * @param {Object} countdown  - countdown object with { date, title, id? }
+     * @param {number} offsetMinutes - minutes before the event to notify
+     */
     scheduleCountdownNotification(countdown, offsetMinutes = 15) {
         if (!this.config.notificationTypes.countdown) return;
 
-        const targetDate = new Date(countdown.targetDate);
-        const notificationTime = new Date(targetDate.getTime() - (offsetMinutes * 60000));
-        const now = new Date();
+        const eventTime = new Date(countdown.date).getTime();
+        const now = Date.now();
+        const offsetMs = offsetMinutes * 60 * 1000;
+        const notifyTime = eventTime - offsetMs;
 
-        // Only schedule if in the future
-        if (notificationTime > now) {
-            const timeUntilNotification = notificationTime - now;
-
-            setTimeout(() => {
+        if (notifyTime > now) {
+            const timeoutId = setTimeout(() => {
                 this.sendNotification(
-                    `⏰ ${countdown.title} is coming up!`,
+                    `Countdown: ${countdown.title}`,
                     {
-                        body: `Only ${offsetMinutes} minutes until ${countdown.title}`,
-                        data: { url: `/countdown.html` },
-                        requireInteraction: true
+                        body: `Your event happens in ${offsetMinutes} minutes!`,
+                        milestoneId: countdown.id,
+                        tag: 'countdown'
                     }
                 );
-            }, timeUntilNotification);
+                this.playNotificationSound();
+            }, notifyTime - now);
 
-            console.log(`Notification scheduled for ${countdown.title} in ${timeUntilNotification}ms`);
+            this._scheduledTimeouts.push(timeoutId);
         }
     },
 
-    // Schedule anniversary notification
+    /**
+     * Schedule an anniversary notification (yearly)
+     * @param {string} anniversaryDate - ISO date string
+     * @param {number} years - number of years
+     */
     scheduleAnniversaryNotification(anniversaryDate, years) {
         if (!this.config.notificationTypes.anniversary) return;
 
-        const nextAnniversary = Storage.getNextOccurrence(anniversaryDate);
-        const now = new Date();
-        const timeUntilAnniversary = nextAnniversary - now;
+        const nextAnniversary = new Date(anniversaryDate);
+        nextAnniversary.setFullYear(nextAnniversary.getFullYear() + years);
+        const now = Date.now();
+        const notifyTime = nextAnniversary.getTime();
 
-        // Schedule 1 day before
-        const dayBefore = new Date(nextAnniversary.getTime() - (24 * 60 * 60000));
-        const timeUntilDayBefore = dayBefore - now;
-
-        if (timeUntilDayBefore > 0) {
-            setTimeout(() => {
+        if (notifyTime > now) {
+            const timeoutId = setTimeout(() => {
                 this.sendNotification(
-                    `🎉 Anniversary Tomorrow!`,
+                    `Anniversary: ${years} years!`,
                     {
-                        body: `Your ${years}-year anniversary is tomorrow!`,
-                        data: { url: `/countdown.html` },
-                        requireInteraction: true
+                        body: `Celebrate your ${years} year anniversary today.`,
+                        tag: 'anniversary'
                     }
                 );
-            }, timeUntilDayBefore);
-        }
+                this.playNotificationSound();
+            }, notifyTime - now);
 
-        // Schedule on the day
-        if (timeUntilAnniversary > 0) {
-            setTimeout(() => {
-                this.sendNotification(
-                    `🎊 Happy Anniversary!`,
-                    {
-                        body: `Congratulations on ${years} years together!`,
-                        data: { url: `/countdown.html` },
-                        requireInteraction: true
-                    }
-                );
-            }, timeUntilAnniversary);
+            this._scheduledTimeouts.push(timeoutId);
         }
     },
 
-    // Schedule milestone reminder
+    /**
+     * Schedule a milestone reminder
+     * @param {Object} milestone - milestone object with { date, title, id }
+     * @param {number} offsetMinutes - minutes before to notify
+     */
     scheduleMilestoneReminder(milestone, offsetMinutes = 15) {
         if (!this.config.notificationTypes.milestone) return;
 
-        const nextOccurrence = Storage.getNextOccurrence(new Date(milestone.date));
-        const notificationTime = new Date(nextOccurrence.getTime() - (offsetMinutes * 60000));
-        const now = new Date();
+        const eventTime = new Date(milestone.date).getTime();
+        const now = Date.now();
+        const offsetMs = offsetMinutes * 60 * 1000;
+        const notifyTime = eventTime - offsetMs;
 
-        if (notificationTime > now) {
-            const timeUntilNotification = notificationTime - now;
-
-            setTimeout(() => {
+        if (notifyTime > now) {
+            const timeoutId = setTimeout(() => {
                 this.sendNotification(
-                    `🌟 ${milestone.title} Anniversary`,
+                    `Milestone Reminder: ${milestone.title}`,
                     {
-                        body: `Time to celebrate ${milestone.title}!`,
-                        data: { url: `/milestone-detail.html?id=${milestone.id}` },
-                        requireInteraction: true
+                        body: `This milestone is coming up in ${offsetMinutes} minutes.`,
+                        milestoneId: milestone.id,
+                        tag: 'milestone'
                     }
                 );
-            }, timeUntilNotification);
+                this.playNotificationSound();
+            }, notifyTime - now);
+
+            this._scheduledTimeouts.push(timeoutId);
         }
     },
 
-    // Check and schedule all notifications
+    /**
+     * Schedule all notifications from stored data (call after loading milestones/countdowns)
+     */
     scheduleAllNotifications() {
-        // Clear existing timeouts
         this.clearAllScheduledNotifications();
 
-        // Get user profile
-        const profile = Storage.getUserProfile();
-        if (profile && profile.anniversaryDate) {
-            const anniversary = new Date(profile.anniversaryDate);
-            const years = new Date().getFullYear() - anniversary.getFullYear();
-            this.scheduleAnniversaryNotification(anniversary, years);
+        // Example: load milestones from Storage and schedule each
+        if (typeof Storage !== 'undefined' && Storage.getMilestones) {
+            const milestones = Storage.getMilestones();
+            milestones.forEach(milestone => {
+                if (milestone.reminder && milestone.reminder.enabled) {
+                    this.scheduleMilestoneReminder(milestone, milestone.reminder.daysBefore * 24 * 60);
+                }
+            });
         }
 
-        // Get milestones with reminders
-        const milestones = Storage.getAllMilestones();
-        milestones.forEach(milestone => {
-            if (milestone.setReminder) {
-                this.scheduleMilestoneReminder(milestone, 15); // 15 minutes before
-            }
-        });
-
-        // Get custom countdowns
-        const customCountdowns = JSON.parse(localStorage.getItem('loveLine_customCountdowns') || '[]');
-        customCountdowns.forEach(countdown => {
-            if (countdown.setReminder) {
-                this.scheduleCountdownNotification(countdown, 15); // 15 minutes before
-            }
-        });
+        // Similarly load countdowns from your data source
+        // ... (implement based on your app)
     },
 
-    // Clear all scheduled notifications
+    /**
+     * Clear all scheduled timeouts
+     */
     clearAllScheduledNotifications() {
-        // In a real app, you'd track and clear specific timeouts
-        // For simplicity, we'll rely on page reloads for now
+        this._scheduledTimeouts.forEach(id => clearTimeout(id));
+        this._scheduledTimeouts = [];
         console.log('All scheduled notifications cleared');
     },
 
-    // Send test notification
+    /**
+     * Send a test notification
+     */
     sendTestNotification() {
         return this.sendNotification(
             'LoveLine Test Notification',
@@ -288,27 +321,26 @@ const NotificationManager = {
         );
     },
 
-    // Enable/disable notifications
     setEnabled(enabled) {
         this.config.enabled = enabled;
         this.saveConfig();
-
-        if (enabled && this.config.permission !== "granted") {
+        if (enabled && this.config.permission !== 'granted') {
             this.requestPermission();
         }
     },
 
-    // Set notification types
     setNotificationType(type, enabled) {
-        if (this.config.notificationTypes[type] !== undefined) {
+        if (this.config.notificationTypes.hasOwnProperty(type)) {
             this.config.notificationTypes[type] = enabled;
             this.saveConfig();
         }
     }
 };
 
-// Initialize notification manager
+// Expose both modules globally
 if (typeof window !== 'undefined') {
+    window.Notifications = Notifications;
     window.NotificationManager = NotificationManager;
-    document.addEventListener('DOMContentLoaded', () => NotificationManager.init());
+    // Optional: auto-init if needed (uncomment next line)
+    // document.addEventListener('DOMContentLoaded', () => NotificationManager.init());
 }

@@ -26,6 +26,10 @@
     <script src="js/storage.js"></script>
     <script src="js/detail-handler.js"></script>
     <script src="node_modules/lightbox2/dist/js/lightbox.min.js"></script>
+    <script src="js/reminder-scheduler.js"></script>
+    <script src="js/gallery.js"></script>
+    <script src="js/milestone-detail.js"></script>
+    <script src="js/app.js"></script>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="assets/icons/favicon.ico">
@@ -247,6 +251,7 @@
                                 </div>
                             </div>
                         </div>
+                        <div id="image-preview-area"></div>
 
                         <!-- Related Milestones -->
                         <div class="detail-section">
@@ -339,6 +344,28 @@
                 </button>
             </div>
         </div>
+    </div>
+    <!-- Photo Gallery Section -->
+    <section class="photo-gallery-section">
+        <div class="gallery-header">
+            <h3>📷 Memory Gallery</h3>
+            <button id="add-photo-btn" class="btn-secondary">+ Add Photos</button>
+        </div>
+    
+        <!-- Hidden file input -->
+        <input type="file" id="photo-upload" accept="image/*" multiple style="display: none;">
+    
+        <!-- Gallery grid -->
+        <div id="gallery-grid" class="gallery-grid">
+            <!-- Images will be injected here -->
+        </div>
+    </section>
+    
+    <!-- Lightbox Modal -->
+    <div id="lightbox-modal" class="lightbox-modal">
+        <span class="close-btn">&times;</span>
+        <img class="lightbox-content" id="lightbox-img">
+        <div id="lightbox-caption"></div>
     </div>
 
     <!-- Lightbox Modal -->

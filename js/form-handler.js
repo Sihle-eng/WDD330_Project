@@ -3,14 +3,23 @@ const FormHandler = {
     // Form state
     formState: {
         tags: [],
-        photos: [],
         isEditing: false,
-        milestoneId: null
+        milestoneId: null,
+        lastSavedId: null,
+        // 🆕 Background image from Unsplash picker
+        backgroundImage: null,
+        imageAttribution: ''
     },
 
     // Initialize form
     init() {
         console.log('Form Handler initialized');
+
+        // Check for required Storage module
+        if (typeof Storage === 'undefined') {
+            console.error('Storage module is not loaded. FormHandler cannot function.');
+            return;
+        }
 
         // Check if we're editing an existing milestone
         this.checkEditMode();
@@ -44,20 +53,34 @@ const FormHandler = {
             this.formState.milestoneId = milestoneId;
 
             // Update form title
-            document.querySelector('h1').innerHTML = `<i class="fas fa-edit"></i> Edit Milestone`;
-            document.querySelector('.form-subtitle').textContent = 'Update your special moment';
+            const h1 = document.querySelector('h1');
+            if (h1) h1.innerHTML = `<i class="fas fa-edit"></i> Edit Milestone`;
+            const subtitle = document.querySelector('.form-subtitle');
+            if (subtitle) subtitle.textContent = 'Update your special moment';
 
             // Populate form fields
-            document.getElementById('milestoneId').value = milestone.id;
-            document.getElementById('title').value = milestone.title || '';
-            document.getElementById('date').value = milestone.date || '';
-            document.getElementById('category').value = milestone.category || '';
-            document.getElementById('description').value = milestone.description || '';
-            document.getElementById('location').value = milestone.location || '';
+            const idField = document.getElementById('milestoneId');
+            if (idField) idField.value = milestone.id || '';
+
+            const titleField = document.getElementById('title');
+            if (titleField) titleField.value = milestone.title || '';
+
+            const dateField = document.getElementById('date');
+            if (dateField) dateField.value = milestone.date || '';
+
+            const categoryField = document.getElementById('category');
+            if (categoryField) categoryField.value = milestone.category || '';
+
+            const descField = document.getElementById('description');
+            if (descField) descField.value = milestone.description || '';
+
+            const locationField = document.getElementById('location');
+            if (locationField) locationField.value = milestone.location || '';
 
             // Set significance
             if (milestone.significance) {
-                document.querySelector(`input[name="significance"][value="${milestone.significance}"]`).checked = true;
+                const radio = document.querySelector(`input[name="significance"][value="${milestone.significance}"]`);
+                if (radio) radio.checked = true;
             }
 
             // Load tags
@@ -66,81 +89,89 @@ const FormHandler = {
                 this.renderTags();
             }
 
-            // Load photos
-            if (milestone.photoIds && Array.isArray(milestone.photoIds)) {
-                this.loadMilestonePhotos(milestone.photoIds);
+            // 🆕 Load background image info (for Unsplash picker)
+            if (milestone.backgroundImage) {
+                this.formState.backgroundImage = milestone.backgroundImage;
+                this.formState.imageAttribution = milestone.imageAttribution || '';
+                // Store globally so image-picker.js can show the selected image
+                window.selectedBackgroundUrl = milestone.backgroundImage;
+                window.selectedBackgroundAttribution = milestone.imageAttribution;
+                // You could also update the image-picker UI to show the current image here
             }
 
-            // Set reminder
-            if (milestone.setReminder) {
-                document.getElementById('setReminder').checked = true;
+            // 🆕 Load reminder settings
+            if (milestone.reminder) {
+                const enableReminder = document.getElementById('enable-reminder');
+                if (enableReminder) enableReminder.checked = milestone.reminder.enabled || false;
+
+                const reminderDays = document.getElementById('reminder-days');
+                if (reminderDays) reminderDays.value = milestone.reminder.daysBefore || 7;
+
+                const reminderTime = document.getElementById('reminder-time');
+                if (reminderTime) reminderTime.value = milestone.reminder.time || '09:00';
+
+                // Toggle visibility of reminder options
+                const options = document.getElementById('reminder-options');
+                if (options) options.style.display = milestone.reminder.enabled ? 'block' : 'none';
             }
 
             // Update button text
-            document.getElementById('saveBtn').innerHTML = '<i class="fas fa-save"></i> Update Milestone';
+            const saveBtn = document.getElementById('saveBtn');
+            if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-save"></i> Update Milestone';
         }
-    },
-
-    // Load photos for a milestone
-    loadMilestonePhotos(photoIds) {
-        // Fetch actual photo data from storage
-        this.formState.photos = photoIds
-            .map(id => {
-                const photo = Storage.getPhotoById(id);
-                if (photo && photo.dataUrl) {
-                    return {
-                        id: photo.id,
-                        url: photo.dataUrl,
-                        name: photo.name
-                    };
-                }
-                // fallback: skip if not found
-                return null;
-            })
-            .filter(photo => photo !== null);
-        this.renderPhotoPreviews();
     },
 
     // Setup event listeners
     setupEventListeners() {
         // Form submission
         const form = document.getElementById('milestoneForm');
-        form.addEventListener('submit', (e) => this.handleSubmit(e));
+        if (form) {
+            form.addEventListener('submit', (e) => this.handleSubmit(e));
+        }
 
         // Cancel button
-        document.getElementById('cancelBtn').addEventListener('click', () => {
-            if (confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
-                window.location.href = 'index.html';
-            }
-        });
-
-        // Photo upload
-        const photoUploadArea = document.getElementById('photoUploadArea');
-        const photoInput = document.getElementById('photos');
-
-        photoUploadArea.addEventListener('click', () => photoInput.click());
-        photoUploadArea.addEventListener('dragover', (e) => this.handleDragOver(e));
-        photoUploadArea.addEventListener('drop', (e) => this.handleFileDrop(e));
-        photoInput.addEventListener('change', (e) => this.handleFileSelect(e));
+        const cancelBtn = document.getElementById('cancelBtn');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                if (confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
+                    window.location.href = 'index.html';
+                }
+            });
+        }
 
         // Tag input
         const tagInput = document.getElementById('tagInput');
-        tagInput.addEventListener('keypress', (e) => this.handleTagInput(e));
+        if (tagInput) {
+            tagInput.addEventListener('keypress', (e) => this.handleTagInput(e));
+        }
 
         // Character counters
-        document.getElementById('title').addEventListener('input', (e) => this.updateCharCount(e));
-        document.getElementById('description').addEventListener('input', (e) => this.updateCharCount(e));
+        const titleInput = document.getElementById('title');
+        const descInput = document.getElementById('description');
+        if (titleInput) titleInput.addEventListener('input', (e) => this.updateCharCount(e));
+        if (descInput) descInput.addEventListener('input', (e) => this.updateCharCount(e));
 
-        // Date max validation
-        const dateInput = document.getElementById('date');
-        const today = new Date().toISOString().split('T')[0];
- // Allow future dates up to 2025
+        // 🆕 Reminder checkbox toggle
+        const enableReminder = document.getElementById('enable-reminder');
+        const reminderOptions = document.getElementById('reminder-options');
+        if (enableReminder && reminderOptions) {
+            enableReminder.addEventListener('change', function (e) {
+                reminderOptions.style.display = e.target.checked ? 'block' : 'none';
+            });
+        }
 
         // Modal buttons
-        document.querySelector('.modal-close').addEventListener('click', () => this.hideModal());
-        document.getElementById('viewMilestoneBtn').addEventListener('click', () => this.viewMilestone());
-        document.getElementById('addAnotherBtn').addEventListener('click', () => this.resetForm());
-        document.getElementById('goHomeBtn').addEventListener('click', () => window.location.href = 'index.html');
+        const modalClose = document.querySelector('.modal-close');
+        if (modalClose) modalClose.addEventListener('click', () => this.hideModal());
+
+        const viewBtn = document.getElementById('viewMilestoneBtn');
+        if (viewBtn) viewBtn.addEventListener('click', () => this.viewMilestone());
+
+        const addAnotherBtn = document.getElementById('addAnotherBtn');
+        if (addAnotherBtn) addAnotherBtn.addEventListener('click', () => this.resetForm());
+
+        const goHomeBtn = document.getElementById('goHomeBtn');
+        if (goHomeBtn) goHomeBtn.addEventListener('click', () => window.location.href = 'index.html');
 
         // Click outside modal to close
         document.addEventListener('click', (e) => {
@@ -154,10 +185,8 @@ const FormHandler = {
     initCharacterCounters() {
         const titleInput = document.getElementById('title');
         const descInput = document.getElementById('description');
-
-        // Initial counts
-        this.updateCharCount({ target: titleInput });
-        this.updateCharCount({ target: descInput });
+        if (titleInput) this.updateCharCount({ target: titleInput });
+        if (descInput) this.updateCharCount({ target: descInput });
     },
 
     // Update character count display
@@ -169,8 +198,6 @@ const FormHandler = {
 
         if (counter) {
             counter.textContent = `${charCount}/${maxLength} characters`;
-
-            // Add warning style if approaching limit
             if (charCount > maxLength * 0.9) {
                 counter.style.color = 'var(--warning-color)';
             } else {
@@ -207,23 +234,19 @@ const FormHandler = {
         const date = document.getElementById('date').value;
         const category = document.getElementById('category').value;
 
-        // Check required fields
         if (!title) {
             alert('Please enter a title for your milestone');
             return false;
         }
-
         if (!date) {
             alert('Please select a date');
             return false;
         }
-
         if (!category) {
             alert('Please select a category');
             return false;
         }
 
-        // Validate date is not in the future (unless it's a planned milestone)
         const selectedDate = new Date(date);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -242,6 +265,15 @@ const FormHandler = {
         const form = document.getElementById('milestoneForm');
         const formData = new FormData(form);
 
+        // 🆕 Background image from global vars (set by image-picker.js)
+        const backgroundImage = window.selectedBackgroundUrl || null;
+        const imageAttribution = window.selectedBackgroundAttribution || '';
+
+        // 🆕 Reminder settings
+        const reminderEnabled = document.getElementById('enable-reminder')?.checked || false;
+        const reminderDays = parseInt(document.getElementById('reminder-days')?.value) || 7;
+        const reminderTime = document.getElementById('reminder-time')?.value || '09:00';
+
         const data = {
             title: formData.get('title'),
             date: formData.get('date'),
@@ -250,8 +282,14 @@ const FormHandler = {
             description: formData.get('description'),
             location: formData.get('location'),
             tags: this.formState.tags,
-            photoIds: this.formState.photos.map(photo => photo.id),
-            setReminder: document.getElementById('setReminder').checked
+            backgroundImage: backgroundImage,
+            imageAttribution: imageAttribution,
+            reminder: {
+                enabled: reminderEnabled,
+                daysBefore: reminderDays,
+                time: reminderTime,
+                lastTriggered: null
+            }
         };
 
         // Add ID if editing
@@ -263,133 +301,7 @@ const FormHandler = {
         return data;
     },
 
-    // Handle file selection
-    handleFileSelect(event) {
-        const files = Array.from(event.target.files);
-        this.processFiles(files);
-    },
-
-    // Handle drag over
-    handleDragOver(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        event.dataTransfer.dropEffect = 'copy';
-
-        const uploadArea = document.getElementById('photoUploadArea');
-        uploadArea.style.borderColor = 'var(--primary-color)';
-        uploadArea.style.background = 'rgba(231, 84, 128, 0.05)';
-    },
-
-    // Handle file drop
-    handleFileDrop(event) {
-        event.preventDefault();
-        event.stopPropagation();
-
-        const uploadArea = document.getElementById('photoUploadArea');
-        uploadArea.style.borderColor = '';
-        uploadArea.style.background = '';
-
-        const files = Array.from(event.dataTransfer.files);
-        this.processFiles(files);
-    },
-
-    // Process uploaded files
-    processFiles(files) {
-        // Filter for images only
-        const imageFiles = files.filter(file => file.type.startsWith('image/'));
-
-        if (imageFiles.length === 0) {
-            alert('Please select only image files (JPG, PNG, GIF)');
-            return;
-        }
-
-        // Check file sizes (max 5MB)
-        const oversizedFiles = imageFiles.filter(file => file.size > 5 * 1024 * 1024);
-        if (oversizedFiles.length > 0) {
-            alert('Some files are too large. Maximum file size is 5MB.');
-            return;
-        }
-
-        // Process each file
-        imageFiles.forEach(file => {
-            this.processImageFile(file);
-        });
-    },
-
-    // Process individual image file
-    processImageFile(file) {
-        const reader = new FileReader();
-
-        reader.onload = (e) => {
-            const photoData = {
-                id: Storage.generatePhotoId(),
-                name: file.name,
-                size: file.size,
-                type: file.type,
-                dataUrl: e.target.result,
-                uploadedAt: new Date().toISOString(),
-                milestoneId: this.formState.milestoneId // Attach milestoneId
-            };
-
-            // Save to storage
-            const photoId = Storage.savePhoto(photoData);
-            if (photoId) {
-                this.formState.photos.push({
-                    id: photoId,
-                    url: e.target.result,
-                    name: file.name
-                });
-                this.renderPhotoPreviews();
-            }
-        };
-
-        reader.readAsDataURL(file);
-    },
-
-    // Render photo previews
-    renderPhotoPreviews() {
-        const previewContainer = document.getElementById('photoPreview');
-        previewContainer.innerHTML = '';
-
-        this.formState.photos.forEach((photo, index) => {
-            const preview = document.createElement('div');
-            preview.className = 'preview-image';
-
-            preview.innerHTML = `
-                <img src="${photo.url}" alt="${photo.name || 'Photo'}">
-                <button class="remove-photo" data-index="${index}">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
-
-            previewContainer.appendChild(preview);
-        });
-
-        // Add remove button listeners
-        document.querySelectorAll('.remove-photo').forEach(button => {
-            button.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const index = parseInt(e.target.closest('button').dataset.index);
-                this.removePhoto(index);
-            });
-        });
-    },
-
-    // Remove photo
-    removePhoto(index) {
-        if (confirm('Remove this photo?')) {
-            const photo = this.formState.photos[index];
-
-            // Remove from storage
-            Storage.deletePhoto(photo.id);
-
-            // Remove from state
-            this.formState.photos.splice(index, 1);
-            this.renderPhotoPreviews();
-        }
-    },
-
-    // Handle tag input
+    // ===== TAG METHODS =====
     handleTagInput(event) {
         if (event.key === 'Enter') {
             event.preventDefault();
@@ -404,9 +316,10 @@ const FormHandler = {
         }
     },
 
-    // Render tags
     renderTags() {
         const tagsContainer = document.getElementById('tagsContainer');
+        if (!tagsContainer) return;
+
         tagsContainer.innerHTML = '';
 
         this.formState.tags.forEach((tag, index) => {
@@ -421,7 +334,6 @@ const FormHandler = {
             tagsContainer.appendChild(tagElement);
         });
 
-        // Add remove listeners
         document.querySelectorAll('.remove-tag').forEach(button => {
             button.addEventListener('click', (e) => {
                 const index = parseInt(e.target.closest('button').dataset.index);
@@ -430,13 +342,12 @@ const FormHandler = {
         });
     },
 
-    // Remove tag
     removeTag(index) {
         this.formState.tags.splice(index, 1);
         this.renderTags();
     },
 
-    // Load suggestion templates
+    // ===== SUGGESTION TEMPLATES =====
     loadSuggestionTemplates() {
         document.querySelectorAll('.suggestion-item').forEach(button => {
             button.addEventListener('click', (e) => {
@@ -446,7 +357,6 @@ const FormHandler = {
         });
     },
 
-    // Apply suggestion template
     applySuggestionTemplate(template) {
         const templates = {
             'first-date': {
@@ -496,82 +406,100 @@ const FormHandler = {
         const data = templates[template];
         if (!data) return;
 
-        // Apply template data
-        document.getElementById('title').value = data.title;
-        document.getElementById('category').value = data.category;
-        document.querySelector(`input[name="significance"][value="${data.significance}"]`).checked = true;
-        document.getElementById('description').value = data.description;
+        const titleField = document.getElementById('title');
+        if (titleField) titleField.value = data.title;
 
-        // Set tags
+        const categoryField = document.getElementById('category');
+        if (categoryField) categoryField.value = data.category;
+
+        const significanceRadio = document.querySelector(`input[name="significance"][value="${data.significance}"]`);
+        if (significanceRadio) significanceRadio.checked = true;
+
+        const descField = document.getElementById('description');
+        if (descField) descField.value = data.description;
+
         this.formState.tags = data.tags;
         this.renderTags();
 
-        // Set today's date
         const today = new Date().toISOString().split('T')[0];
-        document.getElementById('date').value = today;
+        const dateField = document.getElementById('date');
+        if (dateField) dateField.value = today;
 
-        // Update character counters
-        this.updateCharCount({ target: document.getElementById('title') });
-        this.updateCharCount({ target: document.getElementById('description') });
+        this.updateCharCount({ target: titleField });
+        this.updateCharCount({ target: descField });
 
-        // Show confirmation
         alert(`"${data.title}" template applied! Fill in the remaining details.`);
     },
 
-    // Show success modal
+    // ===== SUCCESS MODAL =====
     showSuccessModal(milestoneId) {
         this.formState.lastSavedId = milestoneId;
         const modal = document.getElementById('confirmationModal');
-        modal.classList.add('active');
-        document.body.style.overflow = 'hidden';
+        if (modal) {
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
     },
 
-    // Hide modal
     hideModal() {
         const modal = document.getElementById('confirmationModal');
-        modal.classList.remove('active');
-        document.body.style.overflow = '';
+        if (modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
     },
 
-    // View saved milestone
     viewMilestone() {
         if (this.formState.lastSavedId) {
             window.location.href = `milestone-detail.html?id=${this.formState.lastSavedId}`;
         }
     },
 
-    // Reset form for adding another
     resetForm() {
         const form = document.getElementById('milestoneForm');
-        form.reset();
+        if (form) form.reset();
 
-        // Reset state
         this.formState.tags = [];
-        this.formState.photos = [];
         this.formState.isEditing = false;
         this.formState.milestoneId = null;
+        this.formState.backgroundImage = null;
+        this.formState.imageAttribution = '';
 
-        // Reset UI
-        document.getElementById('milestoneId').value = '';
-        document.querySelector('input[name="significance"][value="medium"]').checked = true;
-        document.getElementById('photoPreview').innerHTML = '';
-        document.getElementById('tagsContainer').innerHTML = '';
+        // Reset hidden inputs and global vars
+        const idField = document.getElementById('milestoneId');
+        if (idField) idField.value = '';
+
+        const defaultSignificance = document.querySelector('input[name="significance"][value="medium"]');
+        if (defaultSignificance) defaultSignificance.checked = true;
+
+        const tagsContainer = document.getElementById('tagsContainer');
+        if (tagsContainer) tagsContainer.innerHTML = '';
+
+        window.selectedBackgroundUrl = null;
+        window.selectedBackgroundAttribution = '';
+
+        // Reset reminder UI
+        const enableReminder = document.getElementById('enable-reminder');
+        if (enableReminder) enableReminder.checked = false;
+
+        const reminderOptions = document.getElementById('reminder-options');
+        if (reminderOptions) reminderOptions.style.display = 'none';
 
         // Update title if editing
-        if (document.querySelector('h1').innerHTML.includes('Edit')) {
-            document.querySelector('h1').innerHTML = `<i class="fas fa-heart-circle-plus"></i> Add New Milestone`;
-            document.querySelector('.form-subtitle').textContent = 'Capture your special moments and celebrate your journey together';
-            document.getElementById('saveBtn').innerHTML = '<i class="fas fa-save"></i> Save Milestone';
+        const h1 = document.querySelector('h1');
+        if (h1 && h1.innerHTML.includes('Edit')) {
+            h1.innerHTML = `<i class="fas fa-heart-circle-plus"></i> Add New Milestone`;
+            const subtitle = document.querySelector('.form-subtitle');
+            if (subtitle) subtitle.textContent = 'Capture your special moments and celebrate your journey together';
+
+            const saveBtn = document.getElementById('saveBtn');
+            if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Milestone';
         }
 
-        // Hide modal
         this.hideModal();
-
-        // Scroll to top
         window.scrollTo(0, 0);
-
-        // Focus on title
-        document.getElementById('title').focus();
+        const titleField = document.getElementById('title');
+        if (titleField) titleField.focus();
     }
 };
 

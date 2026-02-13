@@ -21,6 +21,13 @@
     <link rel="stylesheet" href="css/timeline.css">
     <link rel="stylesheet" href="css/responsive.css">
 
+    <!-- JavaScript Files -->
+    <script src="js/app.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/ui-components.js"></script>
+    <script src="js/notifications.js"></script>
+    <script src="js/reminder-scheduler.js"></script>
+
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="assets/icons/favicon.ico">
 </head>
@@ -249,8 +256,10 @@
 
             <!-- Quick Add Button -->
             <button class="quick-add-btn" id="quickAddBtn">
-                <i class="fas fa-plus"></i>
-                <span>Add Milestone</span>
+                <a href="add-milestone.html">
+                    <i class="fas fa-plus"></i>
+                    <span>Add Milestone</span>
+                </a>
             </button>
         </div>
     </main>
@@ -263,10 +272,7 @@
         </div>
     </footer>
 
-    <!-- JavaScript Files -->
-    <script src="js/app.js"></script>
-    <script src="js/storage.js"></script>
-    <script src="js/ui-components.js"></script>
+
 </body>
 
 </html>

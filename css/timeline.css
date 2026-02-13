@@ -299,40 +299,30 @@
 }
 
 /* Vertical Timeline */
-
-/* Timeline Items (grid layout for larger screens) */
 .timeline-items-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    /* two equal columns */
     gap: 3rem;
-    /* spacing between items */
     position: relative;
     z-index: 2;
     align-items: stretch;
-    /* ensure items in the same row match height */
 }
 
 .timeline-item {
     position: relative;
     margin-bottom: 0;
-    /* spacing handled by grid gap */
     display: flex;
-    /* allow content to stretch to row height */
     align-items: stretch;
 }
 
-/* Odd items go in left column */
 .timeline-item:nth-child(odd) {
     grid-column: 1;
 }
 
-/* Even items go in right column */
 .timeline-item:nth-child(even) {
     grid-column: 2;
 }
 
-/* Timeline line down the middle */
 .timeline-line {
     position: absolute;
     left: 50%;
@@ -347,28 +337,22 @@
 @media (max-width: 1200px) {
     .timeline-items-container {
         grid-template-columns: 1fr;
-        /* single column */
     }
 
     .timeline-item {
         grid-column: 1 !important;
-        /* force all items into one column */
     }
 
     .timeline-line {
         left: 20px;
-        /* move line to left side */
         transform: none;
     }
 
     .timeline-marker {
         left: 20px;
-        /* align markers with line */
         transform: none;
     }
 }
-
-/* removed old float/margin rules for .timeline-content when using grid */
 
 .timeline-marker {
     position: absolute;
@@ -416,7 +400,6 @@
     display: flex;
     flex-direction: column;
     flex: 1;
-    /* fill the height of the .timeline-item so both columns match */
 }
 
 .timeline-content:hover {
@@ -1178,7 +1161,8 @@
 /* Dark Mode Support */
 @media (prefers-color-scheme: dark) {
 
-    .timeline-vertical,
+    /* Fixed: changed .timeline-vertical to .timeline-container */
+    .timeline-container,
     .timeline-horizontal {
         background: #1a1a1a;
     }

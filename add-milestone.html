@@ -22,9 +22,17 @@
     <link rel="stylesheet" href="css/image-picker.css">
 
     <!-- JavaScript Files -->
+    <!-- Core modules -->
     <script src="js/storage.js"></script>
+    <script src="js/notifications.js"></script>
+    <script src="js/reminder-scheduler.js"></script>
+    <script src="js/milestone-detail.js"></script>
+
+    <!-- Form and image picker -->
     <script src="js/form-handler.js"></script>
     <script type="module" src="js/image-picker.js"></script>
+
+    <script src="js/app.js"></script>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="assets/icons/favicon.ico">
@@ -99,6 +107,7 @@
                 <h1><i class="fas fa-heart-circle-plus"></i> Add New Milestone</h1>
                 <p class="form-subtitle">Capture your special moments and celebrate your journey together</p>
             </div>
+
 
             <div class="form-card">
                 <form id="milestoneForm" enctype="multipart/form-data">
@@ -179,6 +188,7 @@
                             placeholder="Tell the story of this special moment... What made it memorable? How did you feel?"></textarea>
                         <small class="char-count">0/1000 characters</small>
                     </div>
+
                     <!-- Add this section after your milestone description field -->
                     <section class="image-picker-container" id="image-picker-section">
                         <div class="image-picker-header">
@@ -198,6 +208,7 @@
 
                         <!-- Hidden input to store selected image data -->
                         <input type="hidden" id="selected-image-data" name="selectedImageData">
+                        <div id="image-preview-area"></div>
                     </section>
 
 
@@ -216,9 +227,7 @@
                             <input type="file" id="photos" name="photos" accept="image/*" multiple
                                 style="display: none;">
                         </div>
-                        <div class="photo-preview" id="photoPreview">
-                            <!-- Preview images will appear here -->
-                        </div>
+                        <div class="photo-preview" id="photoPreview"></div>
                     </div>
 
                     <!-- Location -->
@@ -244,16 +253,35 @@
                     </div>
 
                     <!-- Reminder Toggle -->
-                    <div class="form-group reminder-toggle">
-                        <label class="toggle-label">
-                            <input type="checkbox" id="setReminder" name="setReminder">
-                            <span class="toggle-slider"></span>
+                    <!-- 🆕 Smart Reminder Settings -->
+                    <div class="form-group reminder-settings">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="enable-reminder" name="enableReminder">
                             <span class="toggle-text">
-                                <i class="fas fa-bell"></i>
-                                Set Reminder for Anniversary
+                                <i class="fas fa-bell"></i> Set a reminder for this milestone
                             </span>
                         </label>
-                        <small class="hint">Get notified when this date comes around each year</small>
+
+                        <div id="reminder-options"
+                            style="display: none; margin-top: 1rem; padding-left: 1.5rem; border-left: 3px solid #E75480;">
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 1;">
+                                    <label for="reminder-days">Remind me</label>
+                                    <select id="reminder-days" class="form-control">
+                                        <option value="1">1 day before</option>
+                                        <option value="2">2 days before</option>
+                                        <option value="7" selected>7 days before</option>
+                                        <option value="14">14 days before</option>
+                                        <option value="30">30 days before</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label for="reminder-time">At</label>
+                                    <input type="time" id="reminder-time" class="form-control" value="09:00">
+                                </div>
+                            </div>
+                            <small class="hint">You'll receive a browser notification on this day.</small>
+                        </div>
                     </div>
 
                     <!-- Form Actions -->

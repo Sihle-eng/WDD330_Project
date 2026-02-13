@@ -9,23 +9,35 @@ class ImagePicker {
         this.container = document.getElementById('image-suggestions-container');
         this.suggestBtn = document.getElementById('suggest-image-btn');
         this.hiddenInput = document.getElementById('selected-image-data');
+        this.previewArea = document.getElementById('image-preview-area');
 
-        if (this.suggestBtn) {
-            this.suggestBtn.addEventListener('click', () => this.loadSuggestions());
+        // Guard: if required elements are missing, log a warning and disable functionality
+        if (!this.container) {
+            console.warn('ImagePicker: Container element #image-suggestions-container not found.');
+            return;
         }
+        if (!this.suggestBtn) {
+            console.warn('ImagePicker: Suggest button #suggest-image-btn not found.');
+            return;
+        }
+
+        this.suggestBtn.addEventListener('click', () => this.loadSuggestions());
     }
 
     async loadSuggestions() {
-        const category = document.getElementById('milestone-category')?.value || 'default';
-        const title = document.getElementById('milestone-title')?.value || '';
+        // Safely retrieve category and title; fallback to empty strings if elements missing
+        const categoryEl = document.getElementById('category');
+        const titleEl = document.getElementById('title');
 
-        // Create search query from category and title
+        const category = categoryEl?.value || '';
+        const title = titleEl?.value || '';
+
+        // Build query from category and title
         let query = `${category} ${title}`.trim();
         if (query.length < 3) {
             query = this.getDefaultQuery(category);
         }
 
-        // Show loading state
         this.showLoading();
         this.suggestBtn.disabled = true;
 
@@ -33,6 +45,7 @@ class ImagePicker {
             const images = await fetchUnsplashImages(query, 'landscape', 6);
             this.displayImages(images);
         } catch (error) {
+            console.error('Image fetch error:', error);
             this.showError('Failed to load images. Please try again.');
         } finally {
             this.suggestBtn.disabled = false;
@@ -48,79 +61,102 @@ class ImagePicker {
         let html = '<div class="image-suggestions-grid">';
 
         images.forEach((image, index) => {
+            // Ensure image has the expected properties; provide fallbacks if missing
+            const safeImage = {
+                urls: image.urls || { small: '', regular: '' },
+                alt: image.alt || 'Unsplash image',
+                author: image.author || { name: 'Unknown', link: '#' }
+            };
+
             html += `
                 <div class="image-suggestion-item" data-index="${index}">
-                    <img src="${image.urls.small}" 
-                         alt="${image.alt}" 
+                    <img src="${safeImage.urls.small}" 
+                         alt="${safeImage.alt}" 
                          loading="lazy"
-                         data-full-url="${image.urls.regular}">
+                         data-full-url="${safeImage.urls.regular}">
                     <div class="image-select-overlay">
-                        <button class="select-image-btn" onclick="imagePicker.selectImage(${index}, ${JSON.stringify(image).replace(/"/g, '&quot;')})">
-                            Select
-                        </button>
+                        <button class="select-image-btn" data-index="${index}">Select</button>
                     </div>
                 </div>
             `;
         });
 
         html += '</div>';
-        html += getImageAttribution(images[0]); // Show attribution for first image
+        // Add Unsplash attribution (assumes getImageAttribution returns a string)
+        html += getImageAttribution(images[0]);
 
         this.container.innerHTML = html;
 
-        // Add click handlers for all images
+        // Attach click listeners to each image item (whole card)
         document.querySelectorAll('.image-suggestion-item').forEach(item => {
             item.addEventListener('click', (e) => {
-                if (!e.target.closest('.select-image-btn')) {
-                    const index = item.dataset.index;
-                    this.selectImage(index, images[index]);
-                }
+                // Prevent triggering when clicking the button inside
+                if (e.target.closest('.select-image-btn')) return;
+                const index = item.dataset.index;
+                this.selectImage(index, images[index]);
+            });
+        });
+
+        // Attach click listeners to each Select button
+        document.querySelectorAll('.select-image-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent card click from also firing
+                const index = btn.dataset.index;
+                this.selectImage(index, images[index]);
             });
         });
     }
 
     selectImage(index, imageData) {
+        if (!imageData) return;
+
         // Remove previous selection
         document.querySelectorAll('.image-suggestion-item').forEach(item => {
             item.classList.remove('selected');
         });
 
-        // Mark as selected
-        document.querySelector(`[data-index="${index}"]`)?.classList.add('selected');
+        // Mark current as selected
+        const selectedItem = document.querySelector(`.image-suggestion-item[data-index="${index}"]`);
+        if (selectedItem) selectedItem.classList.add('selected');
 
         // Store selected image
         this.selectedImage = imageData;
 
-        // Update hidden input
+        // --- ✅ SET GLOBAL VARIABLES for FormHandler ---
+        window.selectedBackgroundUrl = imageData.urls?.regular || null;
+        window.selectedBackgroundAttribution = imageData.author?.name
+            ? `${imageData.author.name} on Unsplash`
+            : '';
+
+        // Update hidden input (if present)
         if (this.hiddenInput) {
             this.hiddenInput.value = JSON.stringify({
-                url: imageData.urls.regular,
-                alt: imageData.alt,
-                author: imageData.author.name,
-                authorLink: imageData.author.link
+                url: imageData.urls?.regular || '',
+                alt: imageData.alt || '',
+                author: imageData.author?.name || '',
+                authorLink: imageData.author?.link || ''
             });
         }
 
-        // Show preview in milestone form
+        // Show preview
         this.showPreview(imageData);
 
         console.log('Selected image:', imageData);
     }
 
     showPreview(imageData) {
-        // You can implement a larger preview elsewhere in the UI
-        const previewArea = document.getElementById('image-preview-area');
-        if (previewArea) {
-            previewArea.innerHTML = `
-                <div class="selected-image-preview">
-                    <img src="${imageData.urls.small}" alt="Selected background">
-                    <p>Selected: ${imageData.alt}</p>
-                </div>
-            `;
-        }
+        if (!this.previewArea) return;
+        this.previewArea.innerHTML = `
+            <div class="selected-image-preview">
+                <img src="${imageData.urls?.small || ''}" alt="Selected background">
+                <p>Selected: ${imageData.alt || 'No caption'}</p>
+                <small>by ${imageData.author?.name || 'Unknown'} on Unsplash</small>
+            </div>
+        `;
     }
 
     showLoading() {
+        if (!this.container) return;
         this.container.innerHTML = `
             <div class="image-picker-loading">
                 <div class="spinner"></div>
@@ -130,12 +166,14 @@ class ImagePicker {
     }
 
     showError(message) {
+        if (!this.container) return;
         this.container.innerHTML = `
             <div class="image-picker-error">
                 <p>❌ ${message}</p>
-                <button onclick="imagePicker.loadSuggestions()">Try Again</button>
+                <button id="retry-suggest-btn">Try Again</button>
             </div>
         `;
+        document.getElementById('retry-suggest-btn')?.addEventListener('click', () => this.loadSuggestions());
     }
 
     getDefaultQuery(category) {
@@ -145,7 +183,9 @@ class ImagePicker {
             'trip': 'travel vacation destination',
             'default': 'love relationship happy'
         };
-        return defaults[category] || defaults.default;
+        // Ensure category is a string; if not, use 'default'
+        const safeCategory = (category && typeof category === 'string') ? category.toLowerCase() : 'default';
+        return defaults[safeCategory] || defaults.default;
     }
 
     getSelectedImage() {
@@ -153,9 +193,12 @@ class ImagePicker {
     }
 }
 
-// Initialize on page load
+// Initialize and expose globally for other scripts (FormHandler, etc.)
 let imagePicker;
-
 document.addEventListener('DOMContentLoaded', () => {
-    imagePicker = new ImagePicker();
+    // Only create instance if the container exists (prevents errors on pages without the picker)
+    if (document.getElementById('image-suggestions-container')) {
+        imagePicker = new ImagePicker();
+        window.imagePicker = imagePicker; // Optional global reference
+    }
 });

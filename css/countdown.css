@@ -684,46 +684,30 @@
     background: rgba(255, 255, 255, 0.3);
 }
 
-/* Settings Modal */
-.modal-content {
-    background: white;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-lg);
-    max-width: 500px;
-    width: 90%;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-
-/* full-screen overlay */
+/* ===== MODAL STYLES (cleaned) ===== */
 .modal-overlay {
     position: fixed;
     inset: 0;
-    /* top:0; right:0; bottom:0; left:0; */
-    display: block;
-    background: rgba(0, 0, 0, 0.4);
-    /* optional dim */
+    background: rgba(0, 0, 0, 0.35);
     z-index: 999;
-    /* ensure it sits above page content */
+    pointer-events: auto;
 }
 
-/* center the modal */
 .modal-content {
     position: fixed;
     left: 50%;
     bottom: 2rem;
-    /* distance from the bottom edge */
     transform: translateX(-50%);
     max-width: 500px;
     width: 90%;
     max-height: calc(100vh - 4rem);
-    /* keep some space above the modal */
     overflow-y: auto;
     background: white;
     border-radius: var(--radius);
     box-shadow: var(--shadow-lg);
     z-index: 1000;
 }
+
 .modal-header {
     display: flex;
     justify-content: space-between;
@@ -731,7 +715,6 @@
     padding: 1.5rem;
     border-bottom: 2px solid var(--border-color);
 }
-
 
 .modal-header h3 {
     margin: 0;
@@ -757,15 +740,8 @@
     gap: 1rem;
     justify-content: flex-end;
 }
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.35);
-    z-index: 999;
-    pointer-events: auto;
-}
 
-
+/* Settings sections inside modal */
 .settings-section {
     margin-bottom: 1.5rem;
     padding-bottom: 1.5rem;

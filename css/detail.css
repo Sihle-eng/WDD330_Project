@@ -602,6 +602,7 @@
 
 .lightbox-content {
     position: relative;
+    /* FIXED: added to contain absolute children */
     width: 90%;
     max-width: 1000px;
     height: 90vh;

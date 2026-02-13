@@ -8,47 +8,95 @@ const Storage = {
         PHOTOS: 'loveLine_photos'
     },
 
+    // ===== NORMALIZATION =====
+    /**
+     * Ensures every milestone object has all required fields.
+     * This is used when reading, creating, or updating milestones.
+     */
+    _normalizeMilestone(milestone) {
+        if (!milestone) return null;
+
+        return {
+            // Core fields
+            id: milestone.id || this.generateMilestoneId(),
+            title: milestone.title || '',
+            date: milestone.date || new Date().toISOString().split('T')[0],
+            category: milestone.category || 'other',
+            description: milestone.description || '',
+            significance: milestone.significance || 3,
+            createdAt: milestone.createdAt || new Date().toISOString(),
+            updatedAt: milestone.updatedAt || new Date().toISOString(),
+
+            // 🆕 Unsplash background image fields
+            backgroundImage: milestone.backgroundImage || null,
+            imageAttribution: milestone.imageAttribution || '',
+
+            // 🆕 Reminder settings – merge with defaults to preserve existing fields
+            reminder: {
+                enabled: false,
+                daysBefore: 7,
+                time: '09:00',
+                lastTriggered: null,
+                ...(milestone.reminder || {})
+            }
+        };
+    },
+
     // ===== MILESTONE OPERATIONS =====
 
-    // Get all milestones
+    /**
+     * Get all milestones – always returns normalized objects.
+     */
     getAllMilestones() {
         try {
             const data = localStorage.getItem(this.KEYS.MILESTONES);
-            return data ? JSON.parse(data) : [];
+            const milestones = data ? JSON.parse(data) : [];
+            // Normalize every milestone (adds missing fields)
+            return milestones.map(m => this._normalizeMilestone(m));
         } catch (error) {
             console.error('Error reading milestones:', error);
             return [];
         }
     },
 
-    // Get milestone by ID
+    /**
+     * Get a milestone by its ID.
+     */
     getMilestoneById(id) {
         const milestones = this.getAllMilestones();
-        return milestones.find(milestone => milestone.id === id);
+        return milestones.find(milestone => milestone.id === id) || null;
     },
 
-    // Save milestone (create or update)
+    /**
+     * Save a milestone (create or update).
+     */
     saveMilestone(milestoneData) {
         try {
-            const milestones = this.getAllMilestones();
+            let milestones = this.getAllMilestones(); // Already normalized
 
             if (milestoneData.id) {
-                // Update existing milestone
+                // === UPDATE EXISTING MILESTONE ===
                 const index = milestones.findIndex(m => m.id === milestoneData.id);
                 if (index !== -1) {
-                    milestoneData.updatedAt = new Date().toISOString();
-                    milestones[index] = { ...milestones[index], ...milestoneData };
+                    // Merge existing milestone with new data
+                    const updated = {
+                        ...milestones[index],
+                        ...milestoneData,
+                        updatedAt: new Date().toISOString()
+                    };
+                    // Normalize after merging to ensure all fields exist
+                    milestones[index] = this._normalizeMilestone(updated);
                 } else {
                     throw new Error('Milestone not found');
                 }
             } else {
-                // Create new milestone
-                const newMilestone = {
+                // === CREATE NEW MILESTONE ===
+                const newMilestone = this._normalizeMilestone({
                     ...milestoneData,
                     id: this.generateMilestoneId(),
                     createdAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString()
-                };
+                });
                 milestones.push(newMilestone);
             }
 
@@ -61,7 +109,9 @@ const Storage = {
         }
     },
 
-    // Delete milestone
+    /**
+     * Delete a milestone by ID.
+     */
     deleteMilestone(id) {
         try {
             const milestones = this.getAllMilestones();
@@ -75,7 +125,9 @@ const Storage = {
         }
     },
 
-    // Get milestones by date range
+    /**
+     * Get milestones within a specific date range.
+     */
     getMilestonesByDateRange(startDate, endDate) {
         const milestones = this.getAllMilestones();
         return milestones.filter(milestone => {
@@ -84,7 +136,9 @@ const Storage = {
         });
     },
 
-    // Get upcoming milestones (next 30 days)
+    /**
+     * Get upcoming milestones within the next N days.
+     */
     getUpcomingMilestones(days = 30) {
         const milestones = this.getAllMilestones();
         const today = new Date();
@@ -102,20 +156,18 @@ const Storage = {
         });
     },
 
-    // Get next occurrence of an annual milestone
+    /**
+     * Get the next occurrence of an annual milestone.
+     */
     getNextOccurrence(originalDate) {
         const today = new Date();
         const currentYear = today.getFullYear();
         const milestoneDate = new Date(originalDate);
 
-        // Set to current year
         milestoneDate.setFullYear(currentYear);
-
-        // If already passed this year, set to next year
         if (milestoneDate < today) {
             milestoneDate.setFullYear(currentYear + 1);
         }
-
         return milestoneDate;
     },
 
@@ -188,12 +240,18 @@ const Storage = {
     },
 
     // ===== PHOTO MANAGEMENT =====
-    // Get photo by ID
+
+    /**
+     * Get a photo by its ID.
+     */
     getPhotoById(photoId) {
         const photos = this.getPhotos();
         return photos.find(photo => photo.id === photoId) || null;
     },
 
+    /**
+     * Save a new photo.
+     */
     savePhoto(photoData) {
         try {
             const photos = this.getPhotos();
@@ -211,6 +269,9 @@ const Storage = {
         }
     },
 
+    /**
+     * Get all photos.
+     */
     getPhotos() {
         try {
             const data = localStorage.getItem(this.KEYS.PHOTOS);
@@ -221,11 +282,17 @@ const Storage = {
         }
     },
 
+    /**
+     * Get all photos associated with a specific milestone.
+     */
     getPhotosByMilestone(milestoneId) {
         const photos = this.getPhotos();
         return photos.filter(photo => photo.milestoneId === milestoneId);
     },
 
+    /**
+     * Delete a photo by ID.
+     */
     deletePhoto(photoId) {
         try {
             const photos = this.getPhotos();
@@ -249,7 +316,6 @@ const Storage = {
     },
 
     triggerStorageEvent() {
-        // Create and dispatch a custom event when storage changes
         const event = new CustomEvent('storageUpdated', {
             detail: { timestamp: new Date().toISOString() }
         });
@@ -260,13 +326,14 @@ const Storage = {
 
     exportData() {
         try {
+            const milestones = this.getAllMilestones(); // Already normalized
             const data = {
-                milestones: this.getAllMilestones(),
+                milestones: milestones,
                 userProfile: this.getUserProfile(),
                 settings: this.getSettings(),
                 photos: this.getPhotos(),
                 exportDate: new Date().toISOString(),
-                version: '1.0.0'
+                version: '1.1.0' // Incremented version to reflect new fields
             };
             return JSON.stringify(data, null, 2);
         } catch (error) {
@@ -278,17 +345,16 @@ const Storage = {
     importData(jsonString) {
         try {
             const data = JSON.parse(jsonString);
-
-            // Validate the data structure
             if (!data.milestones || !data.userProfile || !data.settings) {
                 throw new Error('Invalid data format');
             }
 
-            // Save each data type
-            localStorage.setItem(this.KEYS.MILESTONES, JSON.stringify(data.milestones));
+            // Normalize imported milestones (adds missing fields)
+            const normalizedMilestones = data.milestones.map(m => this._normalizeMilestone(m));
+
+            localStorage.setItem(this.KEYS.MILESTONES, JSON.stringify(normalizedMilestones));
             localStorage.setItem(this.KEYS.USER_PROFILE, JSON.stringify(data.userProfile));
             localStorage.setItem(this.KEYS.SETTINGS, JSON.stringify(data.settings));
-
             if (data.photos) {
                 localStorage.setItem(this.KEYS.PHOTOS, JSON.stringify(data.photos));
             }
@@ -302,6 +368,12 @@ const Storage = {
     },
 
     // ===== STATISTICS =====
+    // Helper to map numeric significance to category
+    _mapSignificanceToCategory(significance) {
+        if (significance <= 2) return 'low';
+        if (significance === 3) return 'medium';
+        return 'high'; // 4 or 5
+    },
 
     getStatistics() {
         const milestones = this.getAllMilestones();
@@ -324,18 +396,16 @@ const Storage = {
             averagePerMonth: 0
         };
 
-        // Calculate category breakdown
         milestones.forEach(milestone => {
             // Category stats
             const category = milestone.category || 'uncategorized';
             stats.byCategory[category] = (stats.byCategory[category] || 0) + 1;
 
-            // Significance stats
-            const significance = milestone.significance || 'medium';
-            stats.bySignificance[significance] = (stats.bySignificance[significance] || 0) + 1;
+            // Significance stats – map numeric value to category
+            const significanceCategory = this._mapSignificanceToCategory(milestone.significance);
+            stats.bySignificance[significanceCategory] = (stats.bySignificance[significanceCategory] || 0) + 1;
         });
 
-        // Calculate average per month
         if (milestones.length > 0) {
             const dates = milestones.map(m => new Date(m.date)).sort((a, b) => a - b);
             const firstDate = dates[0];
@@ -356,16 +426,9 @@ const Storage = {
                 timestamp: new Date().toISOString(),
                 backupId: 'backup_' + Date.now()
             };
-
-            // Store last 5 backups
             const backups = this.getBackups();
             backups.unshift(backup);
-
-            // Keep only 5 most recent backups
-            if (backups.length > 5) {
-                backups.pop();
-            }
-
+            if (backups.length > 5) backups.pop();
             localStorage.setItem('loveLine_backups', JSON.stringify(backups));
             return backup.backupId;
         } catch (error) {
@@ -388,11 +451,7 @@ const Storage = {
         try {
             const backups = this.getBackups();
             const backup = backups.find(b => b.backupId === backupId);
-
-            if (!backup) {
-                throw new Error('Backup not found');
-            }
-
+            if (!backup) throw new Error('Backup not found');
             return this.importData(backup.data);
         } catch (error) {
             console.error('Error restoring backup:', error);
@@ -403,5 +462,3 @@ const Storage = {
 
 // Make Storage available globally
 window.Storage = Storage;
-
-
