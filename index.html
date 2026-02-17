@@ -22,11 +22,20 @@
     <link rel="stylesheet" href="css/responsive.css">
 
     <!-- JavaScript Files -->
+    <script src="js/auth.js"></script>
+    <script>
+        if (!Auth.isLoggedIn()) {
+            window.location.href = 'login.html?redirect=index.html';
+        }
+    </script>
     <script src="js/app.js"></script>
     <script src="js/storage.js"></script>
+    <script src="js/utils.js"></script>
     <script src="js/ui-components.js"></script>
     <script src="js/notifications.js"></script>
     <script src="js/reminder-scheduler.js"></script>
+
+
 
 
     <!-- Favicon -->
@@ -70,7 +79,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#">
+                        <a href="reminders.html">
                             <i class="fas fa-bell"></i>
                             <span>Reminders</span>
                         </a>
@@ -88,6 +97,8 @@
                 <div class="avatar">
                     <i class="fas fa-user-circle"></i>
                 </div>
+                <span id="currentUsername"></span>
+                <button id="logoutBtn" class="btn-text">Logout</button>
             </div>
         </div>
     </header>
@@ -210,7 +221,7 @@
                             </div>
                         </div>
                     </div>
-              
+
                     <!-- Search Results -->
                     <div class="search-results" id="searchResults" style="display: none;">
                         <div class="results-header">
@@ -230,7 +241,7 @@
             <section class="timeline-preview">
                 <div class="section-header">
                     <h2><i class="fas fa-stream"></i> Recent Milestones</h2>
-                    <a href="#" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+                    <a href="timeline.html" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
                 </div>
                 <div class="timeline-container" id="timeline-preview">
                     <!-- Timeline items will be populated by JavaScript -->
@@ -269,10 +280,9 @@
     <footer class="main-footer">
         <div class="container">
             <p>Made with <i class="fas fa-heart"></i> for couples everywhere</p>
-            <p class="copyright">© 2024 LoveLine - Relationship Milestone Tracker</p>
+            <p class="copyright">© 2026 LoveLine - Relationship Milestone Tracker - Sihlelelweyinkhosi Welcome Mchobokazi </p>
         </div>
     </footer>
-
 
 </body>
 

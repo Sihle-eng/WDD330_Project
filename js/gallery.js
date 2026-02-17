@@ -57,14 +57,14 @@ class PhotoGallery {
 
     render() {
         // Ensure Storage is available
-        if (typeof Storage === 'undefined') return;
+        // if (typeof Storage === 'undefined') return;
 
-        const photos = Storage.getPhotosByMilestone(this.milestoneId) || [];
+        // const photos = Storage.getPhotosByMilestone(this.milestoneId) || [];
 
-        if (photos.length === 0) {
-            this.container.innerHTML = '<p class="empty-gallery">No memories yet. Click "Add Photos" to start your gallery.</p>';
-            return;
-        }
+        // if (photos.length === 0) {
+        //     this.container.innerHTML = '<p class="empty-gallery">No memories yet. Click "Add Photos" to start your gallery.</p>';
+        //     return;
+        // }
 
         let html = '';
         photos.forEach((photo) => {

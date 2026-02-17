@@ -23,7 +23,16 @@
 
     <!-- JavaScript Files -->
     <!-- Core modules -->
+    <script src="js/auth.js"></script>
+    <script>
+        // Redirect to login if not authenticated
+        if (!Auth.isLoggedIn()) {
+            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            window.location.href = 'login.html?redirect=' + encodeURIComponent(currentPage);
+        }
+    </script>
     <script src="js/storage.js"></script>
+    <script src="js/utils.js"></script>
     <script src="js/notifications.js"></script>
     <script src="js/reminder-scheduler.js"></script>
     <script src="js/milestone-detail.js"></script>
@@ -74,7 +83,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#">
+                        <a href="reminders.html">
                             <i class="fas fa-bell"></i>
                             <span>Reminders</span>
                         </a>
@@ -92,6 +101,8 @@
                 <div class="avatar">
                     <i class="fas fa-user-circle"></i>
                 </div>
+                <span id="currentUsername"></span>
+                <button id="logoutBtn" class="btn-text">Logout</button>
             </div>
         </div>
     </header>

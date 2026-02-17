@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LoveLine - Login</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* Additional styles for login page */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f0ff 0%, #ffe6f0 100%);
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(231, 84, 128, 0.2);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .login-box h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .login-box p {
+            color: #7F8C8D;
+            margin-bottom: 30px;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border: 2px solid #eee;
+            border-radius: 50px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .login-box input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        .password-wrapper {
+            position: relative;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .password-wrapper input {
+            padding-right: 50px;
+            margin-bottom: 0;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #95A5A6;
+            font-size: 1.2rem;
+        }
+
+        .toggle-password:hover {
+            color: var(--primary-color);
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 0.85rem;
+            text-align: left;
+            margin-top: -15px;
+            margin-bottom: 15px;
+            padding-left: 15px;
+        }
+
+        .login-box button[type="submit"] {
+            width: 100%;
+            padding: 15px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+
+        .login-box button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(231, 84, 128, 0.4);
+        }
+
+        .login-box button[type="submit"]:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .login-box .hint {
+            font-size: 0.9rem;
+            margin-top: 15px;
+            color: #95A5A6;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <h1><i class="fas fa-heart"></i> LoveLine</h1>
+            <p>Enter your credentials to continue</p>
+            <p class="hint">(New username + password creates an account)</p>
+            <form id="loginForm">
+                <input type="text" id="username" placeholder="Username" autocomplete="off" required>
+
+                <div class="password-wrapper">
+                    <input type="password" id="password" placeholder="Password (min. 8 characters)" required>
+                    <button type="button" class="toggle-password" id="togglePassword">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <div id="passwordError" class="error-message"></div>
+
+                <div class="password-wrapper">
+                    <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+                    <button type="button" class="toggle-password" id="toggleConfirmPassword">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <div id="confirmError" class="error-message"></div>
+
+                <button type="submit" id="submitBtn">Continue</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // If already logged in, redirect
+            if (Auth.isLoggedIn()) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirect = urlParams.get('redirect') || 'index.html';
+
+            const form = document.getElementById('loginForm');
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const confirmInput = document.getElementById('confirmPassword');
+            const passwordError = document.getElementById('passwordError');
+            const confirmError = document.getElementById('confirmError');
+            const submitBtn = document.getElementById('submitBtn');
+
+            // Real-time validation
+            function validatePasswords() {
+                let isValid = true;
+
+                // Password length
+                if (passwordInput.value.length > 0 && passwordInput.value.length < 8) {
+                    passwordError.textContent = 'Password must be at least 8 characters.';
+                    isValid = false;
+                } else {
+                    passwordError.textContent = '';
+                }
+
+                // Confirm match
+                if (confirmInput.value.length > 0 && passwordInput.value !== confirmInput.value) {
+                    confirmError.textContent = 'Passwords do not match.';
+                    isValid = false;
+                } else {
+                    confirmError.textContent = '';
+                }
+
+                // Enable/disable submit button
+                const allFieldsFilled = usernameInput.value.trim() !== '' &&
+                    passwordInput.value !== '' &&
+                    confirmInput.value !== '';
+                submitBtn.disabled = !(allFieldsFilled && isValid);
+            }
+
+            passwordInput.addEventListener('input', validatePasswords);
+            confirmInput.addEventListener('input', validatePasswords);
+            usernameInput.addEventListener('input', validatePasswords);
+
+            // Form submission
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const username = usernameInput.value;
+                const password = passwordInput.value;
+                const confirm = confirmInput.value;
+
+                if (Auth.login(username, password, confirm)) {
+                    window.location.href = redirect;
+                }
+            });
+
+            // Toggle password visibility for both fields
+            function setupToggle(toggleId, inputId) {
+                const toggle = document.getElementById(toggleId);
+                const input = document.getElementById(inputId);
+                toggle.addEventListener('click', function () {
+                    const type = input.type === 'password' ? 'text' : 'password';
+                    input.type = type;
+                    this.querySelector('i').classList.toggle('fa-eye');
+                    this.querySelector('i').classList.toggle('fa-eye-slash');
+                });
+            }
+            setupToggle('togglePassword', 'password');
+            setupToggle('toggleConfirmPassword', 'confirmPassword');
+
+            // Initial validation (to set button state)
+            validatePasswords();
+        });
+    </script>
+</body>
+
+</html>

@@ -866,3 +866,175 @@ a:hover {
     /* show when JS adds .show */
 }
 
+.settings-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.settings-section {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.settings-section h2 {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    font-family: 'Playfair Display', serif;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.form-group input[type="text"],
+.form-group input[type="date"],
+.form-group select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #eee;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+/* Toggle switch styling */
+.toggle-switch {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.toggle-switch input[type="checkbox"] {
+    width: 50px;
+    height: 26px;
+    appearance: none;
+    background: #ccc;
+    border-radius: 13px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.toggle-switch input[type="checkbox"]:checked {
+    background: var(--primary-color);
+}
+
+.toggle-switch input[type="checkbox"]::before {
+    content: '';
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    background: white;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: left 0.3s;
+}
+
+.toggle-switch input[type="checkbox"]:checked::before {
+    left: 26px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.reminders-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.reminders-list {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px;
+}
+
+.reminder-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.reminder-item:last-child {
+    border-bottom: none;
+}
+
+.reminder-info h4 {
+    margin-bottom: 4px;
+    color: var(--text-primary);
+}
+
+.reminder-info p {
+    color: #7F8C8D;
+    font-size: 0.9rem;
+}
+
+.reminder-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.reminder-toggle input[type="checkbox"] {
+    width: 40px;
+    height: 20px;
+    appearance: none;
+    background: #ccc;
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+}
+
+.reminder-toggle input[type="checkbox"]:checked {
+    background: var(--primary-color);
+}
+
+.reminder-toggle input[type="checkbox"]::before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: left 0.3s;
+}
+
+.reminder-toggle input[type="checkbox"]:checked::before {
+    left: 22px;
+}
+
+.reminder-badge {
+    background: var(--primary-color);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+}

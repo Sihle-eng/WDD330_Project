@@ -51,14 +51,22 @@ const Timeline = {
 
     // Initialize timeline
     init() {
+        // 🛡️ GUARD: Only run if we're on a page that actually contains the timeline containers
+        const container = document.getElementById('verticalTimeline');
+        if (!container) {
+            console.log('Timeline not on this page – skipping initialization.');
+            return; // Exit early to prevent errors on dashboard etc.
+        }
+
         console.log('Timeline initialized');
-
-        this.loadMilestones();
-        this.setupEventListeners();
-        this.setupCharts();
-
-        // Initial render
-        this.renderTimeline();
+        try {
+            this.loadMilestones();
+            this.setupEventListeners();
+            this.setupCharts();
+            this.renderTimeline();
+        } catch (error) {
+            console.error('Timeline initialization error:', error);
+        }
     },
 
     // Load milestones from storage
@@ -221,16 +229,25 @@ const Timeline = {
 
     // Update UI counts
     updateCounts() {
-        document.getElementById('totalMilestonesCount').textContent = this.state.milestones.length;
-        document.getElementById('timeSpanYears').textContent = this.state.statistics.timeSpanYears || 0;
+        // All these elements should exist only on the timeline page
+        const totalCount = document.getElementById('totalMilestonesCount');
+        if (totalCount) totalCount.textContent = this.state.milestones.length;
 
-        // Update stats panel
-        document.getElementById('avgPerMonth').textContent = this.state.statistics.avgPerMonth;
-        document.getElementById('busiestYear').textContent = this.state.statistics.busiestYear || '-';
-        document.getElementById('highSignificance').textContent = this.state.statistics.highSignificance;
-        document.getElementById('milestonesWithPhotos').textContent = this.state.statistics.milestonesWithPhotos;
+        const timeSpan = document.getElementById('timeSpanYears');
+        if (timeSpan) timeSpan.textContent = this.state.statistics.timeSpanYears || 0;
 
-        // Update timeline range display
+        const avgMonth = document.getElementById('avgPerMonth');
+        if (avgMonth) avgMonth.textContent = this.state.statistics.avgPerMonth;
+
+        const busiest = document.getElementById('busiestYear');
+        if (busiest) busiest.textContent = this.state.statistics.busiestYear || '-';
+
+        const highSig = document.getElementById('highSignificance');
+        if (highSig) highSig.textContent = this.state.statistics.highSignificance;
+
+        const withPhotos = document.getElementById('milestonesWithPhotos');
+        if (withPhotos) withPhotos.textContent = this.state.statistics.milestonesWithPhotos;
+
         const rangeSpan = document.getElementById('timelineRange');
         if (rangeSpan && this.state.milestones.length > 0) {
             const dates = this.state.milestones.map(m => new Date(m.date));
@@ -239,44 +256,53 @@ const Timeline = {
             rangeSpan.textContent = `${minYear} - ${maxYear}`;
         }
 
-        // Update filter count
         const filterCount = document.getElementById('filterCount');
-        const activeFilterCount = this.config.activeFilters.categories.length;
-        filterCount.textContent = activeFilterCount === 0 ? 'All Categories' : `${activeFilterCount} Categories`;
+        if (filterCount) {
+            const activeFilterCount = this.config.activeFilters.categories.length;
+            filterCount.textContent = activeFilterCount === 0 ? 'All Categories' : `${activeFilterCount} Categories`;
+        }
     },
 
     // Setup event listeners
     setupEventListeners() {
-        // View toggle buttons
-        document.getElementById('verticalViewBtn').addEventListener('click', () => this.switchView('vertical'));
-        document.getElementById('horizontalViewBtn').addEventListener('click', () => this.switchView('horizontal'));
+        // Helper to safely add event listeners
+        const safeAddListener = (id, event, handler) => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener(event, handler);
+        };
 
-        // Zoom controls
-        document.getElementById('zoomInBtn').addEventListener('click', () => this.zoomIn());
-        document.getElementById('zoomOutBtn').addEventListener('click', () => this.zoomOut());
-        document.getElementById('resetZoomBtn').addEventListener('click', () => this.resetZoom());
+        safeAddListener('verticalViewBtn', 'click', () => this.switchView('vertical'));
+        safeAddListener('horizontalViewBtn', 'click', () => this.switchView('horizontal'));
+        safeAddListener('zoomInBtn', 'click', () => this.zoomIn());
+        safeAddListener('zoomOutBtn', 'click', () => this.zoomOut());
+        safeAddListener('resetZoomBtn', 'click', () => this.resetZoom());
+        safeAddListener('scrollLeftBtn', 'click', () => this.scrollTimeline(-1));
+        safeAddListener('scrollRightBtn', 'click', () => this.scrollTimeline(1));
+        safeAddListener('toggleSignificanceBtn', 'click', () => this.toggleSignificance());
+        safeAddListener('togglePhotosBtn', 'click', () => this.togglePhotos());
+        safeAddListener('selectAllBtn', 'click', () => this.selectAllCategories());
+        safeAddListener('applyFilterBtn', 'click', () => this.applyFilters());
+        safeAddListener('clearFilterBtn', 'click', () => this.clearFilters());
+        safeAddListener('printTimelineBtn', 'click', () => this.printTimeline());
+        safeAddListener('exportTimelineBtn', 'click', () => this.exportTimeline());
+        safeAddListener('toggleStatsBtn', 'click', () => this.toggleStatistics());
 
-        // Navigation buttons
-        document.getElementById('scrollLeftBtn').addEventListener('click', () => this.scrollTimeline(-1));
-        document.getElementById('scrollRightBtn').addEventListener('click', () => this.scrollTimeline(1));
+        // Close modal buttons
+        const modalClose = document.querySelector('.modal-close');
+        if (modalClose) modalClose.addEventListener('click', () => this.closeQuickView());
+        safeAddListener('closeQuickViewBtn', 'click', () => this.closeQuickView());
 
-        // Filter controls
-        document.getElementById('toggleSignificanceBtn').addEventListener('click', () => this.toggleSignificance());
-        document.getElementById('togglePhotosBtn').addEventListener('click', () => this.togglePhotos());
-        document.getElementById('selectAllBtn').addEventListener('click', () => this.selectAllCategories());
-        document.getElementById('applyFilterBtn').addEventListener('click', () => this.applyFilters());
-        document.getElementById('clearFilterBtn').addEventListener('click', () => this.clearFilters());
-
-        // Export/Print
-        document.getElementById('printTimelineBtn').addEventListener('click', () => this.printTimeline());
-        document.getElementById('exportTimelineBtn').addEventListener('click', () => this.exportTimeline());
-
-        // Statistics toggle
-        document.getElementById('toggleStatsBtn').addEventListener('click', () => this.toggleStatistics());
-
-        // Close modal
-        document.querySelector('.modal-close').addEventListener('click', () => this.closeQuickView());
-        document.getElementById('closeQuickViewBtn').addEventListener('click', () => this.closeQuickView());
+        // Delegated listener for remove-photo (if needed)
+        const modal = document.getElementById('quickViewModal');
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target.classList.contains('remove-photo')) {
+                    e.preventDefault();
+                    e.target.disabled = true;
+                    console.log('Remove photo clicked');
+                }
+            });
+        }
 
         // Keyboard navigation
         document.addEventListener('keydown', (e) => this.handleKeyboardNavigation(e));
@@ -290,12 +316,16 @@ const Timeline = {
         this.config.currentView = view;
 
         // Update button states
-        document.getElementById('verticalViewBtn').classList.toggle('active', view === 'vertical');
-        document.getElementById('horizontalViewBtn').classList.toggle('active', view === 'horizontal');
+        const verticalBtn = document.getElementById('verticalViewBtn');
+        const horizontalBtn = document.getElementById('horizontalViewBtn');
+        if (verticalBtn) verticalBtn.classList.toggle('active', view === 'vertical');
+        if (horizontalBtn) horizontalBtn.classList.toggle('active', view === 'horizontal');
 
         // Show/hide timelines
-        document.getElementById('verticalTimeline').style.display = view === 'vertical' ? 'block' : 'none';
-        document.getElementById('horizontalTimeline').style.display = view === 'horizontal' ? 'block' : 'none';
+        const verticalTimeline = document.getElementById('verticalTimeline');
+        const horizontalTimeline = document.getElementById('horizontalTimeline');
+        if (verticalTimeline) verticalTimeline.style.display = view === 'vertical' ? 'block' : 'none';
+        if (horizontalTimeline) horizontalTimeline.style.display = view === 'horizontal' ? 'block' : 'none';
 
         // Re-render timeline
         this.renderTimeline();
@@ -325,17 +355,19 @@ const Timeline = {
 
     // Apply zoom to timeline
     applyZoom() {
-        const zoomPercentage = Math.round(this.config.zoomLevel * 100);
-        document.getElementById('zoomLevel').textContent = `${zoomPercentage}%`;
+        const zoomLevelEl = document.getElementById('zoomLevel');
+        if (zoomLevelEl) zoomLevelEl.textContent = `${Math.round(this.config.zoomLevel * 100)}%`;
 
-        // Apply zoom to timeline container
         const timelineContainer = document.querySelector('.timeline-container');
-        timelineContainer.style.transform = `scale(${this.config.zoomLevel})`;
-        timelineContainer.style.transformOrigin = 'center top';
+        if (timelineContainer) {
+            timelineContainer.style.transform = `scale(${this.config.zoomLevel})`;
+            timelineContainer.style.transformOrigin = 'center top';
+        }
 
-        // Update button states
-        document.getElementById('zoomInBtn').disabled = this.config.zoomLevel >= this.config.maxZoom;
-        document.getElementById('zoomOutBtn').disabled = this.config.zoomLevel <= this.config.minZoom;
+        const zoomInBtn = document.getElementById('zoomInBtn');
+        const zoomOutBtn = document.getElementById('zoomOutBtn');
+        if (zoomInBtn) zoomInBtn.disabled = this.config.zoomLevel >= this.config.maxZoom;
+        if (zoomOutBtn) zoomOutBtn.disabled = this.config.zoomLevel <= this.config.minZoom;
     },
 
     // Scroll timeline
@@ -350,46 +382,37 @@ const Timeline = {
     // Scroll vertical timeline
     scrollVerticalTimeline(direction) {
         const container = document.querySelector('.timeline-vertical');
+        if (!container) return;
         const scrollAmount = 100;
-
-        if (direction === -1) {
-            container.scrollTop -= scrollAmount;
-        } else {
-            container.scrollTop += scrollAmount;
-        }
-
+        container.scrollTop += direction * scrollAmount;
         this.updateProgressBar();
     },
 
     // Scroll horizontal timeline
     scrollHorizontalTimeline(direction) {
         const container = document.querySelector('.timeline-horizontal');
+        if (!container) return;
         const scrollAmount = 100;
-
-        if (direction === -1) {
-            container.scrollLeft -= scrollAmount;
-        } else {
-            container.scrollLeft += scrollAmount;
-        }
-
+        container.scrollLeft += direction * scrollAmount;
         this.updateProgressBar();
     },
 
     // Update progress bar
     updateProgressBar() {
         const container = document.querySelector('.timeline-container');
+        if (!container) return;
         const scrollTop = container.scrollTop;
         const scrollHeight = container.scrollHeight - container.clientHeight;
-
         const progress = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
-        document.getElementById('timelineProgress').style.width = `${progress}%`;
+        const progressBar = document.getElementById('timelineProgress');
+        if (progressBar) progressBar.style.width = `${progress}%`;
     },
 
     // Toggle significance display
     toggleSignificance() {
         this.config.showSignificance = !this.config.showSignificance;
         const button = document.getElementById('toggleSignificanceBtn');
-        button.classList.toggle('active', this.config.showSignificance);
+        if (button) button.classList.toggle('active', this.config.showSignificance);
         this.renderTimeline();
     },
 
@@ -397,7 +420,7 @@ const Timeline = {
     togglePhotos() {
         this.config.showPhotos = !this.config.showPhotos;
         const button = document.getElementById('togglePhotosBtn');
-        button.classList.toggle('active', this.config.showPhotos);
+        if (button) button.classList.toggle('active', this.config.showPhotos);
         this.renderTimeline();
     },
 
@@ -440,8 +463,10 @@ const Timeline = {
     // Update filter UI
     updateFilterUI() {
         const filterCount = document.getElementById('filterCount');
-        const count = this.config.activeFilters.categories.length;
-        filterCount.textContent = count === 0 ? 'All Categories' : `${count} Categories`;
+        if (filterCount) {
+            const count = this.config.activeFilters.categories.length;
+            filterCount.textContent = count === 0 ? 'All Categories' : `${count} Categories`;
+        }
     },
 
     // Print timeline
@@ -460,7 +485,6 @@ const Timeline = {
 
         const dataStr = JSON.stringify(timelineData, null, 2);
         const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-
         const exportFileDefaultName = `loveline-timeline-${new Date().toISOString().split('T')[0]}.json`;
 
         const linkElement = document.createElement('a');
@@ -473,6 +497,7 @@ const Timeline = {
     toggleStatistics() {
         const content = document.getElementById('statsContent');
         const button = document.getElementById('toggleStatsBtn');
+        if (!content || !button) return;
 
         if (content.style.display === 'none') {
             content.style.display = 'block';
@@ -528,8 +553,11 @@ const Timeline = {
 
     // Close quick view modal
     closeQuickView() {
-        document.getElementById('quickViewModal').classList.remove('active');
-        document.body.style.overflow = '';
+        const modal = document.getElementById('quickViewModal');
+        if (modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
     },
 
     // Render timeline
@@ -581,6 +609,7 @@ const Timeline = {
     // Render vertical timeline
     renderVerticalTimeline() {
         const container = document.getElementById('verticalTimeline');
+        if (!container) return;
 
         if (this.state.filteredMilestones.length === 0) {
             container.innerHTML = `
@@ -595,16 +624,13 @@ const Timeline = {
                 </div>
             `;
 
-            // Add event listener to clear filters button if it exists
             const clearFiltersBtn = document.getElementById('clearFiltersBtn');
             if (clearFiltersBtn) {
                 clearFiltersBtn.addEventListener('click', () => this.clearFilters());
             }
-
             return;
         }
 
-        // Create timeline structure
         let timelineHTML = `
             <div class="timeline-line"></div>
             <div class="timeline-items-container">
@@ -618,26 +644,20 @@ const Timeline = {
                 day: 'numeric'
             });
 
-            // Calculate position (alternating sides)
             const isLeftSide = index % 2 === 0;
-
-            // Get category color and icon
             const category = milestone.category || 'other';
             const categoryColor = this.categoryColors[category] || this.categoryColors.other;
             const categoryIcon = this.categoryIcons[category] || this.categoryIcons.other;
 
-            // Significance stars
             let significanceStars = '';
             if (this.config.showSignificance) {
                 const significance = milestone.significance || 'medium';
                 const starCount = { high: 3, medium: 2, low: 1 }[significance] || 2;
-
                 for (let i = 0; i < 3; i++) {
                     significanceStars += `<i class="fas fa-star significance-star ${i < starCount ? 'active' : ''}"></i>`;
                 }
             }
 
-            // Photo preview
             let photoPreview = '';
             if (this.config.showPhotos && milestone.photoIds && milestone.photoIds.length > 0) {
                 const photos = Storage.getPhotosByMilestone(milestone.id);
@@ -657,38 +677,28 @@ const Timeline = {
 
             timelineHTML += `
                 <div class="timeline-item" data-milestone-id="${milestone.id}">
-                    <!-- timeline-marker removed -->
-                    
                     <div class="timeline-content ${isLeftSide ? 'left' : 'right'}" 
                          style="border-left-color: ${categoryColor}; border-left-width: 4px;">
                         <div class="timeline-date" style="background: ${categoryColor}">
                             ${formattedDate}
                         </div>
-                        
                         <h3 class="timeline-title" data-milestone-id="${milestone.id}">
                             ${milestone.title}
                         </h3>
-                        
                         <div class="timeline-category" style="background: ${categoryColor}20; color: ${categoryColor}">
                             <i class="fas ${categoryIcon}"></i>
                             ${this.formatCategoryName(category)}
                         </div>
-                        
                         <div class="timeline-description">
                             ${milestone.description || 'No description provided.'}
                         </div>
-                        
                         ${photoPreview}
-                        
                         <div class="timeline-footer">
                             <div class="timeline-significance">
                                 ${significanceStars}
                             </div>
-                            
                             <div class="timeline-actions">
-                                <button class="btn-icon view-detail-btn" data-milestone-id="${milestone.id}">
-                                    <i class="fas fa-eye"></i>
-                                </button>
+
                                 <a href="add-milestone.html?edit=${milestone.id}" class="btn-icon">
                                     <i class="fas fa-edit"></i>
                                 </a>
@@ -701,14 +711,13 @@ const Timeline = {
 
         timelineHTML += '</div>';
         container.innerHTML = timelineHTML;
-
-        // Add event listeners to timeline items
         this.addTimelineEventListeners();
     },
 
     // Render horizontal timeline
     renderHorizontalTimeline() {
         const container = document.getElementById('horizontalTimeline');
+        if (!container) return;
 
         if (this.state.filteredMilestones.length === 0) {
             container.innerHTML = `
@@ -721,7 +730,6 @@ const Timeline = {
             return;
         }
 
-        // Calculate total time span
         const dates = this.state.filteredMilestones.map(m => new Date(m.date));
         const minDate = new Date(Math.min(...dates));
         const maxDate = new Date(Math.max(...dates));
@@ -732,12 +740,10 @@ const Timeline = {
             <div class="horizontal-timeline-items">
         `;
 
-        this.state.filteredMilestones.forEach((milestone, index) => {
+        this.state.filteredMilestones.forEach((milestone) => {
             const date = new Date(milestone.date);
             const daysFromStart = (date - minDate) / (1000 * 60 * 60 * 24);
             const positionPercentage = totalDays > 0 ? (daysFromStart / totalDays) * 100 : 50;
-
-            // Get category color
             const category = milestone.category || 'other';
             const categoryColor = this.categoryColors[category] || this.categoryColors.other;
 
@@ -745,21 +751,17 @@ const Timeline = {
                 <div class="horizontal-timeline-item" 
                      style="left: ${positionPercentage}%;"
                      data-milestone-id="${milestone.id}">
-                    
                     <div class="horizontal-marker" 
                          style="border-color: ${categoryColor};"
                          title="${milestone.title}">
                     </div>
-                    
                     <div class="horizontal-content">
                         <div class="timeline-date" style="background: ${categoryColor}">
                             ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </div>
-                        
                         <h4 class="timeline-title" data-milestone-id="${milestone.id}">
                             ${milestone.title}
                         </h4>
-                        
                         <div class="timeline-category" style="background: ${categoryColor}20; color: ${categoryColor}">
                             ${this.formatCategoryName(category)}
                         </div>
@@ -770,14 +772,13 @@ const Timeline = {
 
         timelineHTML += '</div>';
         container.innerHTML = timelineHTML;
-
-        // Add event listeners
         this.addTimelineEventListeners();
     },
 
     // Render year navigation
     renderYearNavigation() {
         const container = document.getElementById('yearNavigation');
+        if (!container) return;
 
         if (this.state.years.length <= 1) {
             container.innerHTML = '';
@@ -785,7 +786,6 @@ const Timeline = {
         }
 
         let yearHTML = '<button class="year-btn" data-year="all">All Years</button>';
-
         this.state.years.forEach(year => {
             const isActive = this.config.currentYear === year;
             yearHTML += `
@@ -797,19 +797,16 @@ const Timeline = {
 
         container.innerHTML = yearHTML;
 
-        // Add event listeners
         container.querySelectorAll('.year-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 const year = e.currentTarget.dataset.year;
                 this.config.currentYear = year === 'all' ? null : parseInt(year);
 
-                // Update button states
                 container.querySelectorAll('.year-btn').forEach(btn => {
                     btn.classList.remove('active');
                 });
                 e.currentTarget.classList.add('active');
 
-                // Update timeline
                 this.renderTimeline();
             });
         });
@@ -818,10 +815,10 @@ const Timeline = {
     // Render legend
     renderLegend() {
         const container = document.getElementById('timelineLegend');
+        if (!container) return;
 
         let legendHTML = '';
 
-        // Add significance legend if showing significance
         if (this.config.showSignificance) {
             legendHTML += `
                 <div class="legend-item">
@@ -839,7 +836,6 @@ const Timeline = {
             `;
         }
 
-        // Add category legend
         Object.entries(this.categoryColors).forEach(([category, color]) => {
             if (this.state.categories.includes(category)) {
                 legendHTML += `
@@ -856,7 +852,6 @@ const Timeline = {
 
     // Add event listeners to timeline items
     addTimelineEventListeners() {
-        // Milestone title clicks
         document.querySelectorAll('.timeline-title').forEach(title => {
             title.addEventListener('click', (e) => {
                 const milestoneId = e.currentTarget.dataset.milestoneId;
@@ -864,7 +859,6 @@ const Timeline = {
             });
         });
 
-        // View detail buttons
         document.querySelectorAll('.view-detail-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 const milestoneId = e.currentTarget.dataset.milestoneId;
@@ -872,12 +866,6 @@ const Timeline = {
             });
         });
 
-        // Milestone marker clicks
-        document.querySelectorAll('.timeline-marker, .horizontal-marker').forEach(marker => {
-            // timeline-marker click event removed
-        });
-
-        // Photo thumbnail clicks
         document.querySelectorAll('.photo-thumbnail').forEach(thumbnail => {
             thumbnail.addEventListener('click', (e) => {
                 const milestoneId = e.currentTarget.dataset.milestoneId;
@@ -886,14 +874,16 @@ const Timeline = {
             });
         });
 
-        // Populate category filters
         this.populateCategoryFilters();
     },
 
     // Show quick view modal
     showQuickView(milestoneId) {
         const milestone = Storage.getMilestoneById(milestoneId);
-        if (!milestone) return;
+        if (!milestone) {
+            console.error('Milestone not found:', milestoneId);
+            return;
+        }
 
         const date = new Date(milestone.date);
         const formattedDate = date.toLocaleDateString('en-US', {
@@ -903,8 +893,8 @@ const Timeline = {
             day: 'numeric'
         });
 
-        // Update modal content
-        document.getElementById('quickViewTitle').textContent = milestone.title;
+        const titleEl = document.getElementById('quickViewTitle');
+        if (titleEl) titleEl.textContent = milestone.title;
 
         let contentHTML = `
             <div class="quick-view-details">
@@ -916,65 +906,53 @@ const Timeline = {
             </div>
         `;
 
-        // Add tags if available
         if (milestone.tags && milestone.tags.length > 0) {
             const tagsHTML = milestone.tags.map(tag =>
                 `<span class="quick-view-tag">${tag}</span>`
             ).join('');
-
-            contentHTML += `
-                <div class="quick-view-tags">
-                    ${tagsHTML}
-                </div>
-            `;
+            contentHTML += `<div class="quick-view-tags">${tagsHTML}</div>`;
         }
 
-        // Add photo if available
         if (milestone.photoIds && milestone.photoIds.length > 0) {
-            const photoUrl = milestone.photoIds[0]; // or however you store the uploaded photo
+            const photoUrl = milestone.photoIds[0]; // adjust as needed
             contentHTML = `
-        <div class="quick-view-photo">
-            <img src="${photoUrl}" alt="${milestone.title}">
-        </div>
-    ` + contentHTML;
-        }
-        document.addEventListener('click', function (e) {
-            if (e.target.classList.contains('remove-photo')) {
-                e.preventDefault(); // stop default behavior
-                e.target.disabled = true; // visually freeze the button
-            }
-        });
-
-
-
-        const quickView = document.getElementById('quickViewContent');
-        if (quickView) {
-            quickView.innerHTML = contentHTML;
+                <div class="quick-view-photo">
+                    <img src="${photoUrl}" alt="${milestone.title}">
+                </div>
+            ` + contentHTML;
         }
 
+        const quickViewContent = document.getElementById('quickViewContent');
+        if (quickViewContent) {
+            quickViewContent.innerHTML = contentHTML;
+        } else {
+            console.error('quickViewContent element not found in the DOM');
+        }
 
-        // Update action buttons
-        document.getElementById('viewDetailsBtn').href = `milestone-detail.html?id=${milestoneId}`;
-        document.getElementById('editMilestoneBtn').href = `add-milestone.html?edit=${milestoneId}`;
+        const viewDetailsBtn = document.getElementById('viewDetailsBtn');
+        if (viewDetailsBtn) viewDetailsBtn.href = `milestone-detail.html?id=${milestoneId}`;
 
-        // Show modal
-        document.getElementById('quickViewModal').classList.add('active');
-        document.body.style.overflow = 'hidden';
+        const editBtn = document.getElementById('editMilestoneBtn');
+        if (editBtn) editBtn.href = `add-milestone.html?edit=${milestoneId}`;
+
+        const modal = document.getElementById('quickViewModal');
+        if (modal) {
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
     },
 
     // Show photo view
     showPhotoView(milestoneId, photoIndex) {
-        // In a real app, this would open a lightbox with the actual photo
-        // For now, we'll just alert
         alert(`Viewing photo ${parseInt(photoIndex) + 1} of milestone ${milestoneId}`);
     },
 
     // Populate category filters
     populateCategoryFilters() {
         const container = document.getElementById('categoryFilters');
+        if (!container) return;
 
         let filterHTML = '';
-
         this.state.categories.forEach(category => {
             const isChecked = this.config.activeFilters.categories.length === 0 ||
                 this.config.activeFilters.categories.includes(category);
@@ -997,31 +975,21 @@ const Timeline = {
 
     // Setup charts
     setupCharts() {
-        // Initialize charts with empty data
-        const categoryCtx = document.getElementById('categoryChartCanvas').getContext('2d');
-        const monthlyCtx = document.getElementById('monthlyChartCanvas').getContext('2d');
+        const categoryCanvas = document.getElementById('categoryChartCanvas');
+        const monthlyCanvas = document.getElementById('monthlyChartCanvas');
+        if (!categoryCanvas || !monthlyCanvas) return;
+
+        const categoryCtx = categoryCanvas.getContext('2d');
+        const monthlyCtx = monthlyCanvas.getContext('2d');
 
         this.state.chartInstances.categoryChart = new Chart(categoryCtx, {
             type: 'doughnut',
-            data: {
-                labels: [],
-                datasets: [{
-                    data: [],
-                    backgroundColor: [],
-                    borderWidth: 1
-                }]
-            },
+            data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderWidth: 1 }] },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            usePointStyle: true
-                        }
-                    }
+                    legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true } }
                 }
             }
         });
@@ -1041,46 +1009,30 @@ const Timeline = {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                }
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+                plugins: { legend: { display: false } }
             }
         });
     },
 
     // Update charts with data
     updateCharts() {
-        // Update category chart
+        if (!this.state.chartInstances.categoryChart || !this.state.chartInstances.monthlyChart) return;
+
         const categoryData = this.state.statistics.categoryDistribution;
         const categoryLabels = Object.keys(categoryData);
         const categoryValues = Object.values(categoryData);
-        const categoryColors = categoryLabels.map(category =>
-            this.categoryColors[category] || this.categoryColors.other
-        );
+        const categoryColors = categoryLabels.map(cat => this.categoryColors[cat] || this.categoryColors.other);
 
-        this.state.chartInstances.categoryChart.data.labels = categoryLabels.map(cat =>
-            this.formatCategoryName(cat)
-        );
+        this.state.chartInstances.categoryChart.data.labels = categoryLabels.map(cat => this.formatCategoryName(cat));
         this.state.chartInstances.categoryChart.data.datasets[0].data = categoryValues;
         this.state.chartInstances.categoryChart.data.datasets[0].backgroundColor = categoryColors;
         this.state.chartInstances.categoryChart.update();
 
-        // Update monthly activity chart
         const monthlyData = this.state.statistics.monthlyActivity;
         const monthlyLabels = Object.keys(monthlyData);
         const monthlyValues = Object.values(monthlyData);
 
-        // Format month labels
         const formattedLabels = monthlyLabels.map(label => {
             const [year, month] = label.split('-');
             const date = new Date(year, month - 1, 1);
@@ -1094,7 +1046,7 @@ const Timeline = {
 
     // Format category name
     formatCategoryName(category) {
-        return category.charAt(0).toUpperCase() + category.slice(1);
+        return category ? category.charAt(0).toUpperCase() + category.slice(1) : 'Other';
     },
 
     // Format significance
@@ -1110,4 +1062,3 @@ const Timeline = {
 
 // Initialize timeline when DOM loads
 document.addEventListener('DOMContentLoaded', () => Timeline.init());
-

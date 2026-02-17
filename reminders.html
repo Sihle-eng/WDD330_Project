@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeline - LoveLine</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&family=Dancing+Script:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
+
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/timeline.css">
+
+    <!-- JavaScript Files -->
+    <script src="js/auth.js"></script>
+    <script>
+        // Redirect to login if not authenticated
+        if (!Auth.isLoggedIn()) {
+            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            window.location.href = 'login.html?redirect=' + encodeURIComponent(currentPage);
+        }
+    </script>
+    <script src="js/storage.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="./node_modules/chart.js/dist/chart.umd.js"></script>
+    <script src="js/reminder-scheduler.js"></script>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="assets/icons/favicon.ico">
+</head>
+
+<body>
+    <!-- Navigation Header -->
+    <header class="main-header">
+        <div class="container">
+            <div class="logo-container">
+                <i class="fas fa-heart logo-icon"></i>
+                <h1 class="logo-text">LoveLine</h1>
+            </div>
+
+            <nav class="main-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="index.html">
+                            <i class="fas fa-home"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="add-milestone.html">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Add Milestone</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="countdown.html">
+                            <i class="fas fa-clock"></i>
+                            <span>Countdowns</span>
+                        </a>
+                    </li>
+                    <li class="nav-item active">
+                        <a href="reminders.html">
+                            <i class="fas fa-bell"></i>
+                            <span>Reminders</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="settings.html">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="user-profile">
+                <div class="avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <span id="currentUsername"></span>
+                <button id="logoutBtn" class="btn-text">Logout</button>
+            </div>
+        </div>
+    </header>
+    <main class="reminders-container">
+        <div class="container">
+            <h1><i class="fas fa-bell"></i> Reminders</h1>
+
+            <!-- Next reminders summary -->
+            <section class="reminders-summary">
+                <h2>Upcoming Reminders</h2>
+                <div id="nextRemindersList" class="reminders-list">
+                    <!-- populated by JS -->
+                </div>
+            </section>
+
+            <!-- Milestone reminders -->
+            <section class="milestone-reminders">
+                <h2>Manage Milestone Reminders</h2>
+                <p class="hint">Toggle reminders for individual milestones. Default reminder time is set in <a
+                        href="settings.html">Settings</a>.</p>
+                <div id="milestoneRemindersList" class="reminders-list">
+                    <!-- populated by JS -->
+                </div>
+            </section>
+
+            <!-- Reminder settings shortcut -->
+            <div class="actions">
+                <a href="settings.html" class="btn-secondary"><i class="fas fa-cog"></i> Notification Settings</a>
+            </div>
+        </div>
+    </main>
+
+</body>
+
+</html>

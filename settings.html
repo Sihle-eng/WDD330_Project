@@ -12,22 +12,32 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&family=Dancing+Script:wght@400;500;600;700&display=swap"
         rel="stylesheet">
-    
+
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
-    
+
     <!-- CSS Files -->
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/timeline.css">
     <link rel="stylesheet" href="css/responsive.css">
-    
+
     <!-- JavaScript Files -->
+    <script src="js/auth.js"></script>
+    <script>
+        // Redirect to login if not authenticated
+        if (!Auth.isLoggedIn()) {
+            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            window.location.href = 'login.html?redirect=' + encodeURIComponent(currentPage);
+        }
+    </script>
     <script src="js/app.js"></script>
     <script src="js/storage.js"></script>
+    <script src="js/utils.js"></script>
     <script src="js/ui-components.js"></script>
     <script src="js/notifications.js"></script>
     <script src="js/reminder-scheduler.js"></script>
-    
+    <script src="js/settings.js"></script>
+
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="assets/icons/favicon.ico">
 </head>
@@ -69,7 +79,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#">
+                        <a href="reminders.html">
                             <i class="fas fa-bell"></i>
                             <span>Reminders</span>
                         </a>
@@ -87,6 +97,8 @@
                 <div class="avatar">
                     <i class="fas fa-user-circle"></i>
                 </div>
+                <span id="currentUsername"></span>
+                <button id="logoutBtn" class="btn-text">Logout</button>
             </div>
         </div>
     </header>
@@ -95,12 +107,58 @@
     <main class="settings-container">
         <div class="container">
             <h1><i class="fas fa-cog"></i> Settings</h1>
-            <div class="settings-card">
-                <p>Settings page will be implemented later</p>
-                <a href="index.html" class="btn-back">
-                    <i class="fas fa-arrow-left"></i> Back to Dashboard
-                </a>
-            </div>
+
+            <form id="settingsForm">
+                <!-- Profile Section -->
+                <section class="settings-section">
+                    <h2>Profile</h2>
+                    <div class="form-group">
+                        <label for="coupleName">Couple Name</label>
+                        <input type="text" id="coupleName" name="coupleName" placeholder="e.g., Sarah & Alex">
+                    </div>
+                    <div class="form-group">
+                        <label for="anniversaryDate">Anniversary Date</label>
+                        <input type="date" id="anniversaryDate" name="anniversaryDate">
+                    </div>
+                </section>
+
+                <!-- Notifications Section -->
+                <section class="settings-section">
+                    <h2>Notifications</h2>
+                    <div class="form-group toggle-switch">
+                        <label for="enableNotifications">Enable Notifications</label>
+                        <input type="checkbox" id="enableNotifications" name="enableNotifications">
+                    </div>
+                    <div class="form-group" id="reminderDaysGroup">
+                        <label for="reminderDays">Remind me</label>
+                        <select id="reminderDays" name="reminderDays">
+                            <option value="1">1 day before</option>
+                            <option value="3">3 days before</option>
+                            <option value="7">7 days before</option>
+                            <option value="14">14 days before</option>
+                        </select>
+                    </div>
+                </section>
+
+                <!-- Theme Section -->
+                <section class="settings-section">
+                    <h2>Theme</h2>
+                    <div class="form-group">
+                        <label for="theme">Color Theme</label>
+                        <select id="theme" name="theme">
+                            <option value="romance">Romance (Pink)</option>
+                            <option value="ocean">Ocean (Blue)</option>
+                            <option value="forest">Forest (Green)</option>
+                            <option value="sunset">Sunset (Orange)</option>
+                        </select>
+                    </div>
+                </section>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Save Settings</button>
+                    <button type="button" id="resetSettings" class="btn-secondary">Reset to Default</button>
+                </div>
+            </form>
         </div>
     </main>
 </body>

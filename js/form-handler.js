@@ -6,9 +6,9 @@ const FormHandler = {
         isEditing: false,
         milestoneId: null,
         lastSavedId: null,
-        // 🆕 Background image from Unsplash picker
         backgroundImage: null,
-        imageAttribution: ''
+        imageAttribution: '',
+        photos: [] // 🆕 Store selected photos (as File objects or data URLs)
     },
 
     // Initialize form
@@ -89,17 +89,21 @@ const FormHandler = {
                 this.renderTags();
             }
 
-            // 🆕 Load background image info (for Unsplash picker)
+            // Load background image info (for Unsplash picker)
             if (milestone.backgroundImage) {
                 this.formState.backgroundImage = milestone.backgroundImage;
                 this.formState.imageAttribution = milestone.imageAttribution || '';
-                // Store globally so image-picker.js can show the selected image
                 window.selectedBackgroundUrl = milestone.backgroundImage;
                 window.selectedBackgroundAttribution = milestone.imageAttribution;
-                // You could also update the image-picker UI to show the current image here
             }
 
-            // 🆕 Load reminder settings
+            // 🆕 Load photos (if you store them in the milestone)
+            if (milestone.photos && Array.isArray(milestone.photos)) {
+                this.formState.photos = milestone.photos;
+                this.renderPhotoPreviews(milestone.photos); // You'd need to implement this
+            }
+
+            // Load reminder settings
             if (milestone.reminder) {
                 const enableReminder = document.getElementById('enable-reminder');
                 if (enableReminder) enableReminder.checked = milestone.reminder.enabled || false;
@@ -110,7 +114,6 @@ const FormHandler = {
                 const reminderTime = document.getElementById('reminder-time');
                 if (reminderTime) reminderTime.value = milestone.reminder.time || '09:00';
 
-                // Toggle visibility of reminder options
                 const options = document.getElementById('reminder-options');
                 if (options) options.style.display = milestone.reminder.enabled ? 'block' : 'none';
             }
@@ -151,13 +154,25 @@ const FormHandler = {
         if (titleInput) titleInput.addEventListener('input', (e) => this.updateCharCount(e));
         if (descInput) descInput.addEventListener('input', (e) => this.updateCharCount(e));
 
-        // 🆕 Reminder checkbox toggle
+        // Reminder checkbox toggle
         const enableReminder = document.getElementById('enable-reminder');
         const reminderOptions = document.getElementById('reminder-options');
         if (enableReminder && reminderOptions) {
             enableReminder.addEventListener('change', function (e) {
                 reminderOptions.style.display = e.target.checked ? 'block' : 'none';
             });
+        }
+
+        // 🆕 Photo upload: click area triggers file input
+        const photoUploadArea = document.getElementById('photoUploadArea');
+        const photoInput = document.getElementById('photos');
+        if (photoUploadArea && photoInput) {
+            photoUploadArea.addEventListener('click', () => {
+                photoInput.click();
+            });
+
+            // Handle file selection
+            photoInput.addEventListener('change', (e) => this.handlePhotoSelection(e));
         }
 
         // Modal buttons
@@ -206,28 +221,45 @@ const FormHandler = {
         }
     },
 
-    // Handle form submission
     handleSubmit(event) {
         event.preventDefault();
+        console.log('Form submitted – starting validation');
 
-        // Validate form
-        if (!this.validateForm()) {
+        const saveBtn = document.getElementById('saveBtn');
+        if (saveBtn.disabled) {
+            console.log('Already submitting – ignoring');
             return;
         }
+        saveBtn.disabled = true;
 
-        // Get form data
-        const formData = this.getFormData();
+        try {
+            // Validate
+            if (!this.validateForm()) {
+                console.log('Validation failed');
+                saveBtn.disabled = false;
+                return;
+            }
 
-        // Save to storage
-        const success = Storage.saveMilestone(formData);
+            console.log('Validation passed – collecting form data');
+            const formData = this.getFormData();
+            console.log('Saving milestone:', formData);
 
-        if (success) {
-            this.showSuccessModal(formData.id);
-        } else {
-            alert('Error saving milestone. Please try again.');
+            const success = Storage.saveMilestone(formData);
+            console.log('Storage.saveMilestone returned:', success);
+
+            if (success) {
+                this.showSuccessModal(formData.id);
+                // Button stays disabled (we may redirect)
+            } else {
+                alert('Error saving milestone. Please try again.');
+                saveBtn.disabled = false;
+            }
+        } catch (error) {
+            console.error('Exception during save:', error);
+            alert('An unexpected error occurred. Check console for details.');
+            saveBtn.disabled = false;
         }
     },
-
     // Validate form
     validateForm() {
         const title = document.getElementById('title').value.trim();
@@ -265,14 +297,24 @@ const FormHandler = {
         const form = document.getElementById('milestoneForm');
         const formData = new FormData(form);
 
-        // 🆕 Background image from global vars (set by image-picker.js)
+        // Background image from global vars (set by image-picker.js)
         const backgroundImage = window.selectedBackgroundUrl || null;
         const imageAttribution = window.selectedBackgroundAttribution || '';
 
-        // 🆕 Reminder settings
+        // Reminder settings
         const reminderEnabled = document.getElementById('enable-reminder')?.checked || false;
         const reminderDays = parseInt(document.getElementById('reminder-days')?.value) || 7;
         const reminderTime = document.getElementById('reminder-time')?.value || '09:00';
+
+        // 🆕 Get photos from formState (or process files as needed)
+        // Here we store them as an array of objects with data URL and name
+        // You may want to upload them to a server instead of storing as base64
+        const photos = this.formState.photos.map(photo => ({
+            name: photo.name,
+            type: photo.type,
+            size: photo.size,
+            dataUrl: photo.dataUrl // or store as File if you plan to upload later
+        }));
 
         const data = {
             title: formData.get('title'),
@@ -284,6 +326,7 @@ const FormHandler = {
             tags: this.formState.tags,
             backgroundImage: backgroundImage,
             imageAttribution: imageAttribution,
+            photos: photos, // 🆕 Add photos to milestone data
             reminder: {
                 enabled: reminderEnabled,
                 daysBefore: reminderDays,
@@ -345,6 +388,68 @@ const FormHandler = {
     removeTag(index) {
         this.formState.tags.splice(index, 1);
         this.renderTags();
+    },
+
+    // ===== PHOTO HANDLING METHODS =====
+    handlePhotoSelection(event) {
+        const files = Array.from(event.target.files);
+        const previewContainer = document.getElementById('photoPreview');
+        if (!previewContainer) return;
+
+        // Clear previous previews and reset formState.photos
+        previewContainer.innerHTML = '';
+        this.formState.photos = [];
+
+        files.forEach(file => {
+            // Validate file type (accept images only)
+            if (!file.type.startsWith('image/')) {
+                alert(`File ${file.name} is not an image.`);
+                return;
+            }
+
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert(`File ${file.name} exceeds 5MB limit.`);
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                // Create preview image
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.alt = file.name;
+                previewContainer.appendChild(img);
+
+                // Store in formState (including dataUrl for later saving)
+                this.formState.photos.push({
+                    name: file.name,
+                    type: file.type,
+                    size: file.size,
+                    dataUrl: e.target.result
+                });
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // If no valid files, clear preview
+        if (this.formState.photos.length === 0) {
+            previewContainer.innerHTML = '';
+        }
+    },
+
+    // Optional: render existing photos when editing
+    renderPhotoPreviews(photos) {
+        const previewContainer = document.getElementById('photoPreview');
+        if (!previewContainer) return;
+
+        previewContainer.innerHTML = '';
+        photos.forEach(photo => {
+            const img = document.createElement('img');
+            img.src = photo.dataUrl || photo; // if photo is just a URL
+            img.alt = photo.name || 'Milestone photo';
+            previewContainer.appendChild(img);
+        });
     },
 
     // ===== SUGGESTION TEMPLATES =====
@@ -433,11 +538,16 @@ const FormHandler = {
 
     // ===== SUCCESS MODAL =====
     showSuccessModal(milestoneId) {
+        console.log('showSuccessModal called with', milestoneId);
         this.formState.lastSavedId = milestoneId;
         const modal = document.getElementById('confirmationModal');
+        console.log('Modal element found:', modal);
         if (modal) {
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
+            console.log('Modal active class added');
+        } else {
+            console.error('Modal element not found!');
         }
     },
 
@@ -464,6 +574,7 @@ const FormHandler = {
         this.formState.milestoneId = null;
         this.formState.backgroundImage = null;
         this.formState.imageAttribution = '';
+        this.formState.photos = []; // 🆕 Clear photos
 
         // Reset hidden inputs and global vars
         const idField = document.getElementById('milestoneId');
@@ -474,6 +585,14 @@ const FormHandler = {
 
         const tagsContainer = document.getElementById('tagsContainer');
         if (tagsContainer) tagsContainer.innerHTML = '';
+
+        // Clear photo preview
+        const previewContainer = document.getElementById('photoPreview');
+        if (previewContainer) previewContainer.innerHTML = '';
+
+        // Clear file input value so same file can be re-selected
+        const photoInput = document.getElementById('photos');
+        if (photoInput) photoInput.value = '';
 
         window.selectedBackgroundUrl = null;
         window.selectedBackgroundAttribution = '';

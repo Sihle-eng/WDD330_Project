@@ -1,23 +1,29 @@
-// ===== LOCAL STORAGE MODULE =====
+// ===== LOCAL STORAGE MODULE (with multi‑user support) =====
 const Storage = {
-    // Keys for localStorage
+    // Base keys (without username)
     KEYS: {
-        MILESTONES: 'loveLine_milestones',
-        SETTINGS: 'loveLine_settings',
-        USER_PROFILE: 'loveLine_userProfile',
-        PHOTOS: 'loveLine_photos'
+        MILESTONES: 'loveline_milestones',
+        SETTINGS: 'loveline_settings',
+        USER_PROFILE: 'loveline_userProfile',
+        PHOTOS: 'loveline_photos',
+        BACKUPS: 'loveline_backups'
+    },
+
+    // Helper to get the full storage key for the current user
+    _getKey(baseKey) {
+        const user = Auth.getCurrentUser();
+        if (!user) {
+            console.warn('No user logged in – using default (guest) prefix');
+            // For development, fallback to a default key; in production you'd redirect.
+            return baseKey + '_guest';
+        }
+        return `${baseKey}_${user}`;
     },
 
     // ===== NORMALIZATION =====
-    /**
-     * Ensures every milestone object has all required fields.
-     * This is used when reading, creating, or updating milestones.
-     */
     _normalizeMilestone(milestone) {
         if (!milestone) return null;
-
         return {
-            // Core fields
             id: milestone.id || this.generateMilestoneId(),
             title: milestone.title || '',
             date: milestone.date || new Date().toISOString().split('T')[0],
@@ -26,32 +32,25 @@ const Storage = {
             significance: milestone.significance || 3,
             createdAt: milestone.createdAt || new Date().toISOString(),
             updatedAt: milestone.updatedAt || new Date().toISOString(),
-
-            // 🆕 Unsplash background image fields
             backgroundImage: milestone.backgroundImage || null,
             imageAttribution: milestone.imageAttribution || '',
-
-            // 🆕 Reminder settings – merge with defaults to preserve existing fields
             reminder: {
                 enabled: false,
                 daysBefore: 7,
                 time: '09:00',
                 lastTriggered: null,
                 ...(milestone.reminder || {})
-            }
+            },
+            photos: milestone.photos || []   // photo objects stored directly
         };
     },
 
     // ===== MILESTONE OPERATIONS =====
-
-    /**
-     * Get all milestones – always returns normalized objects.
-     */
     getAllMilestones() {
         try {
-            const data = localStorage.getItem(this.KEYS.MILESTONES);
+            const key = this._getKey(this.KEYS.MILESTONES);
+            const data = localStorage.getItem(key);
             const milestones = data ? JSON.parse(data) : [];
-            // Normalize every milestone (adds missing fields)
             return milestones.map(m => this._normalizeMilestone(m));
         } catch (error) {
             console.error('Error reading milestones:', error);
@@ -59,38 +58,29 @@ const Storage = {
         }
     },
 
-    /**
-     * Get a milestone by its ID.
-     */
     getMilestoneById(id) {
         const milestones = this.getAllMilestones();
-        return milestones.find(milestone => milestone.id === id) || null;
+        return milestones.find(m => m.id === id) || null;
     },
 
-    /**
-     * Save a milestone (create or update).
-     */
     saveMilestone(milestoneData) {
         try {
-            let milestones = this.getAllMilestones(); // Already normalized
+            let milestones = this.getAllMilestones();
+            const key = this._getKey(this.KEYS.MILESTONES);
 
             if (milestoneData.id) {
-                // === UPDATE EXISTING MILESTONE ===
                 const index = milestones.findIndex(m => m.id === milestoneData.id);
                 if (index !== -1) {
-                    // Merge existing milestone with new data
                     const updated = {
                         ...milestones[index],
                         ...milestoneData,
                         updatedAt: new Date().toISOString()
                     };
-                    // Normalize after merging to ensure all fields exist
                     milestones[index] = this._normalizeMilestone(updated);
                 } else {
                     throw new Error('Milestone not found');
                 }
             } else {
-                // === CREATE NEW MILESTONE ===
                 const newMilestone = this._normalizeMilestone({
                     ...milestoneData,
                     id: this.generateMilestoneId(),
@@ -100,7 +90,7 @@ const Storage = {
                 milestones.push(newMilestone);
             }
 
-            localStorage.setItem(this.KEYS.MILESTONES, JSON.stringify(milestones));
+            localStorage.setItem(key, JSON.stringify(milestones));
             this.triggerStorageEvent();
             return true;
         } catch (error) {
@@ -109,14 +99,12 @@ const Storage = {
         }
     },
 
-    /**
-     * Delete a milestone by ID.
-     */
     deleteMilestone(id) {
         try {
             const milestones = this.getAllMilestones();
-            const filteredMilestones = milestones.filter(milestone => milestone.id !== id);
-            localStorage.setItem(this.KEYS.MILESTONES, JSON.stringify(filteredMilestones));
+            const filtered = milestones.filter(m => m.id !== id);
+            const key = this._getKey(this.KEYS.MILESTONES);
+            localStorage.setItem(key, JSON.stringify(filtered));
             this.triggerStorageEvent();
             return true;
         } catch (error) {
@@ -125,57 +113,43 @@ const Storage = {
         }
     },
 
-    /**
-     * Get milestones within a specific date range.
-     */
     getMilestonesByDateRange(startDate, endDate) {
         const milestones = this.getAllMilestones();
-        return milestones.filter(milestone => {
-            const milestoneDate = new Date(milestone.date);
-            return milestoneDate >= startDate && milestoneDate <= endDate;
+        return milestones.filter(m => {
+            const d = new Date(m.date);
+            return d >= startDate && d <= endDate;
         });
     },
 
-    /**
-     * Get upcoming milestones within the next N days.
-     */
     getUpcomingMilestones(days = 30) {
         const milestones = this.getAllMilestones();
         const today = new Date();
-        const futureDate = new Date();
-        futureDate.setDate(today.getDate() + days);
+        const future = new Date();
+        future.setDate(today.getDate() + days);
 
-        return milestones.filter(milestone => {
-            const milestoneDate = new Date(milestone.date);
-            const nextOccurrence = this.getNextOccurrence(milestoneDate);
-            return nextOccurrence >= today && nextOccurrence <= futureDate;
+        return milestones.filter(m => {
+            const next = this.getNextOccurrence(new Date(m.date));
+            return next >= today && next <= future;
         }).sort((a, b) => {
-            const dateA = this.getNextOccurrence(new Date(a.date));
-            const dateB = this.getNextOccurrence(new Date(b.date));
-            return dateA - dateB;
+            const aNext = this.getNextOccurrence(new Date(a.date));
+            const bNext = this.getNextOccurrence(new Date(b.date));
+            return aNext - bNext;
         });
     },
 
-    /**
-     * Get the next occurrence of an annual milestone.
-     */
     getNextOccurrence(originalDate) {
         const today = new Date();
-        const currentYear = today.getFullYear();
-        const milestoneDate = new Date(originalDate);
-
-        milestoneDate.setFullYear(currentYear);
-        if (milestoneDate < today) {
-            milestoneDate.setFullYear(currentYear + 1);
-        }
-        return milestoneDate;
+        const next = new Date(originalDate);
+        next.setFullYear(today.getFullYear());
+        if (next < today) next.setFullYear(today.getFullYear() + 1);
+        return next;
     },
 
     // ===== USER PROFILE OPERATIONS =====
-
     getUserProfile() {
         try {
-            const data = localStorage.getItem(this.KEYS.USER_PROFILE);
+            const key = this._getKey(this.KEYS.USER_PROFILE);
+            const data = localStorage.getItem(key);
             const defaultProfile = {
                 coupleName: 'Lovebirds',
                 anniversaryDate: new Date().toISOString().split('T')[0],
@@ -187,15 +161,16 @@ const Storage = {
             return data ? { ...defaultProfile, ...JSON.parse(data) } : defaultProfile;
         } catch (error) {
             console.error('Error reading user profile:', error);
-            return null;
+            return defaultProfile;
         }
     },
 
     saveUserProfile(profileData) {
         try {
-            const currentProfile = this.getUserProfile();
-            const updatedProfile = { ...currentProfile, ...profileData };
-            localStorage.setItem(this.KEYS.USER_PROFILE, JSON.stringify(updatedProfile));
+            const current = this.getUserProfile();
+            const updated = { ...current, ...profileData };
+            const key = this._getKey(this.KEYS.USER_PROFILE);
+            localStorage.setItem(key, JSON.stringify(updated));
             this.triggerStorageEvent();
             return true;
         } catch (error) {
@@ -205,10 +180,10 @@ const Storage = {
     },
 
     // ===== SETTINGS OPERATIONS =====
-
     getSettings() {
         try {
-            const data = localStorage.getItem(this.KEYS.SETTINGS);
+            const key = this._getKey(this.KEYS.SETTINGS);
+            const data = localStorage.getItem(key);
             const defaultSettings = {
                 theme: 'light',
                 notifications: true,
@@ -228,9 +203,10 @@ const Storage = {
 
     saveSettings(settingsData) {
         try {
-            const currentSettings = this.getSettings();
-            const updatedSettings = { ...currentSettings, ...settingsData };
-            localStorage.setItem(this.KEYS.SETTINGS, JSON.stringify(updatedSettings));
+            const current = this.getSettings();
+            const updated = { ...current, ...settingsData };
+            const key = this._getKey(this.KEYS.SETTINGS);
+            localStorage.setItem(key, JSON.stringify(updated));
             this.triggerStorageEvent();
             return true;
         } catch (error) {
@@ -240,18 +216,11 @@ const Storage = {
     },
 
     // ===== PHOTO MANAGEMENT =====
-
-    /**
-     * Get a photo by its ID.
-     */
     getPhotoById(photoId) {
         const photos = this.getPhotos();
-        return photos.find(photo => photo.id === photoId) || null;
+        return photos.find(p => p.id === photoId) || null;
     },
 
-    /**
-     * Save a new photo.
-     */
     savePhoto(photoData) {
         try {
             const photos = this.getPhotos();
@@ -261,7 +230,8 @@ const Storage = {
                 uploadedAt: new Date().toISOString()
             };
             photos.push(newPhoto);
-            localStorage.setItem(this.KEYS.PHOTOS, JSON.stringify(photos));
+            const key = this._getKey(this.KEYS.PHOTOS);
+            localStorage.setItem(key, JSON.stringify(photos));
             return newPhoto.id;
         } catch (error) {
             console.error('Error saving photo:', error);
@@ -269,12 +239,10 @@ const Storage = {
         }
     },
 
-    /**
-     * Get all photos.
-     */
     getPhotos() {
         try {
-            const data = localStorage.getItem(this.KEYS.PHOTOS);
+            const key = this._getKey(this.KEYS.PHOTOS);
+            const data = localStorage.getItem(key);
             return data ? JSON.parse(data) : [];
         } catch (error) {
             console.error('Error reading photos:', error);
@@ -282,22 +250,17 @@ const Storage = {
         }
     },
 
-    /**
-     * Get all photos associated with a specific milestone.
-     */
     getPhotosByMilestone(milestoneId) {
         const photos = this.getPhotos();
-        return photos.filter(photo => photo.milestoneId === milestoneId);
+        return photos.filter(p => p.milestoneId === milestoneId);
     },
 
-    /**
-     * Delete a photo by ID.
-     */
     deletePhoto(photoId) {
         try {
             const photos = this.getPhotos();
-            const filteredPhotos = photos.filter(photo => photo.id !== photoId);
-            localStorage.setItem(this.KEYS.PHOTOS, JSON.stringify(filteredPhotos));
+            const filtered = photos.filter(p => p.id !== photoId);
+            const key = this._getKey(this.KEYS.PHOTOS);
+            localStorage.setItem(key, JSON.stringify(filtered));
             return true;
         } catch (error) {
             console.error('Error deleting photo:', error);
@@ -306,7 +269,6 @@ const Storage = {
     },
 
     // ===== UTILITY FUNCTIONS =====
-
     generateMilestoneId() {
         return 'milestone_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     },
@@ -322,18 +284,25 @@ const Storage = {
         window.dispatchEvent(event);
     },
 
-    // ===== DATA EXPORT/IMPORT =====
+    // ===== CLEAR SETTINGS =====
+    clearSettings() {
+        const key = this._getKey(this.KEYS.SETTINGS);
+        if (key) localStorage.removeItem(key);
+        const profileKey = this._getKey(this.KEYS.USER_PROFILE);
+        if (profileKey) localStorage.removeItem(profileKey);
+        this.triggerStorageEvent();
+    },
 
+    // ===== DATA EXPORT/IMPORT =====
     exportData() {
         try {
-            const milestones = this.getAllMilestones(); // Already normalized
             const data = {
-                milestones: milestones,
+                milestones: this.getAllMilestones(),
                 userProfile: this.getUserProfile(),
                 settings: this.getSettings(),
                 photos: this.getPhotos(),
                 exportDate: new Date().toISOString(),
-                version: '1.1.0' // Incremented version to reflect new fields
+                version: '1.1.0'
             };
             return JSON.stringify(data, null, 2);
         } catch (error) {
@@ -349,14 +318,18 @@ const Storage = {
                 throw new Error('Invalid data format');
             }
 
-            // Normalize imported milestones (adds missing fields)
             const normalizedMilestones = data.milestones.map(m => this._normalizeMilestone(m));
 
-            localStorage.setItem(this.KEYS.MILESTONES, JSON.stringify(normalizedMilestones));
-            localStorage.setItem(this.KEYS.USER_PROFILE, JSON.stringify(data.userProfile));
-            localStorage.setItem(this.KEYS.SETTINGS, JSON.stringify(data.settings));
+            const milestonesKey = this._getKey(this.KEYS.MILESTONES);
+            const profileKey = this._getKey(this.KEYS.USER_PROFILE);
+            const settingsKey = this._getKey(this.KEYS.SETTINGS);
+            const photosKey = this._getKey(this.KEYS.PHOTOS);
+
+            localStorage.setItem(milestonesKey, JSON.stringify(normalizedMilestones));
+            localStorage.setItem(profileKey, JSON.stringify(data.userProfile));
+            localStorage.setItem(settingsKey, JSON.stringify(data.settings));
             if (data.photos) {
-                localStorage.setItem(this.KEYS.PHOTOS, JSON.stringify(data.photos));
+                localStorage.setItem(photosKey, JSON.stringify(data.photos));
             }
 
             this.triggerStorageEvent();
@@ -368,11 +341,10 @@ const Storage = {
     },
 
     // ===== STATISTICS =====
-    // Helper to map numeric significance to category
     _mapSignificanceToCategory(significance) {
         if (significance <= 2) return 'low';
         if (significance === 3) return 'medium';
-        return 'high'; // 4 or 5
+        return 'high';
     },
 
     getStatistics() {
@@ -383,42 +355,35 @@ const Storage = {
         const stats = {
             totalMilestones: milestones.length,
             milestonesThisYear: milestones.filter(m => {
-                const milestoneDate = new Date(m.date);
-                return milestoneDate >= startOfYear;
+                const d = new Date(m.date);
+                return d >= startOfYear;
             }).length,
             byCategory: {},
-            bySignificance: {
-                high: 0,
-                medium: 0,
-                low: 0
-            },
+            bySignificance: { high: 0, medium: 0, low: 0 },
             upcomingCount: this.getUpcomingMilestones().length,
             averagePerMonth: 0
         };
 
-        milestones.forEach(milestone => {
-            // Category stats
-            const category = milestone.category || 'uncategorized';
-            stats.byCategory[category] = (stats.byCategory[category] || 0) + 1;
+        milestones.forEach(m => {
+            const cat = m.category || 'uncategorized';
+            stats.byCategory[cat] = (stats.byCategory[cat] || 0) + 1;
 
-            // Significance stats – map numeric value to category
-            const significanceCategory = this._mapSignificanceToCategory(milestone.significance);
-            stats.bySignificance[significanceCategory] = (stats.bySignificance[significanceCategory] || 0) + 1;
+            const sigCat = this._mapSignificanceToCategory(m.significance);
+            stats.bySignificance[sigCat] = (stats.bySignificance[sigCat] || 0) + 1;
         });
 
         if (milestones.length > 0) {
             const dates = milestones.map(m => new Date(m.date)).sort((a, b) => a - b);
-            const firstDate = dates[0];
-            const monthsDiff = (today.getFullYear() - firstDate.getFullYear()) * 12 +
-                (today.getMonth() - firstDate.getMonth());
+            const first = dates[0];
+            const monthsDiff = (today.getFullYear() - first.getFullYear()) * 12 +
+                (today.getMonth() - first.getMonth());
             stats.averagePerMonth = monthsDiff > 0 ? (milestones.length / monthsDiff).toFixed(1) : milestones.length;
         }
 
         return stats;
     },
 
-    // ===== BACKUP MANAGEMENT =====
-
+    // ===== BACKUP MANAGEMENT (per user) =====
     createBackup() {
         try {
             const backup = {
@@ -429,7 +394,8 @@ const Storage = {
             const backups = this.getBackups();
             backups.unshift(backup);
             if (backups.length > 5) backups.pop();
-            localStorage.setItem('loveLine_backups', JSON.stringify(backups));
+            const key = this._getKey(this.KEYS.BACKUPS);
+            localStorage.setItem(key, JSON.stringify(backups));
             return backup.backupId;
         } catch (error) {
             console.error('Error creating backup:', error);
@@ -439,7 +405,8 @@ const Storage = {
 
     getBackups() {
         try {
-            const data = localStorage.getItem('loveLine_backups');
+            const key = this._getKey(this.KEYS.BACKUPS);
+            const data = localStorage.getItem(key);
             return data ? JSON.parse(data) : [];
         } catch (error) {
             console.error('Error reading backups:', error);
@@ -460,5 +427,4 @@ const Storage = {
     }
 };
 
-// Make Storage available globally
 window.Storage = Storage;

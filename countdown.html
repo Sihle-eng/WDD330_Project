@@ -20,6 +20,20 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/countdown.css">
 
+    <!-- JavaScript Files -->
+    <script src="js/auth.js"></script>
+    <script>
+        // Redirect to login if not authenticated
+        if (!Auth.isLoggedIn()) {
+            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            window.location.href = 'login.html?redirect=' + encodeURIComponent(currentPage);
+        }
+    </script>
+    <script src="js/storage.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/countdown.js"></script>
+
+
     <!-- Confetti Library -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 
@@ -63,6 +77,12 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a href="reminders.html">
+                            <i class="fas fa-bell"></i>
+                            <span>Reminders</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a href="settings.html">
                             <i class="fas fa-cog"></i>
                             <span>Settings</span>
@@ -75,6 +95,8 @@
                 <div class="avatar">
                     <i class="fas fa-user-circle"></i>
                 </div>
+                <span id="currentUsername"></span>
+                <button id="logoutBtn" class="btn-text">Logout</button>
             </div>
         </div>
     </header>
@@ -392,9 +414,7 @@
         </div>
     </div>
 
-    <!-- JavaScript Files -->
-    <script src="js/storage.js"></script>
-    <script src="js/countdown.js"></script>
+
 </body>
 
 </html>

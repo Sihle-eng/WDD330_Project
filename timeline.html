@@ -21,7 +21,16 @@
     <link rel="stylesheet" href="css/timeline.css">
 
     <!-- JavaScript Files -->
+    <script src="js/auth.js"></script>
+    <script>
+        // Redirect to login if not authenticated
+        if (!Auth.isLoggedIn()) {
+            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            window.location.href = 'login.html?redirect=' + encodeURIComponent(currentPage);
+        }
+    </script>
     <script src="js/storage.js"></script>
+    <script src="js/utils.js"></script>
     <script src="./node_modules/chart.js/dist/chart.umd.js"></script>
     <script src="js/timeline.js"></script>
 
@@ -65,7 +74,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#">
+                        <a href="reminders.html">
                             <i class="fas fa-bell"></i>
                             <span>Reminders</span>
                         </a>
@@ -83,6 +92,8 @@
                 <div class="avatar">
                     <i class="fas fa-user-circle"></i>
                 </div>
+                <span id="currentUsername"></span>
+                <button id="logoutBtn" class="btn-text">Logout</button>
             </div>
         </div>
     </header>
@@ -312,32 +323,19 @@
     </main>
 
     <!-- Milestone Quick View Modal -->
+    <!-- Milestone Quick View Modal -->
     <div class="modal" id="quickViewModal">
-        <div class="modal-content timeline-modal">
-            <div class="modal-header">
-                <h3 id="quickViewTitle"></h3>
-                <div class="modal-close"></div>
-            </div>
-            <div class="modal-body">
-                <!-- <div class="quick-view-content" id="quickViewContent"> -->
-                <!-- Content will be populated by JavaScript -->
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h2 id="quickViewTitle"></h2>
+            <!-- This is the container for dynamic content -->
+            <div id="quickViewContent"></div>
+            <div class="modal-actions">
+                <a href="#" id="viewDetailsBtn" class="btn">View Details</a>
+                <a href="#" id="editMilestoneBtn" class="btn">Edit</a>
             </div>
         </div>
-        <div class="modal-footer">
-            <button class="btn-secondary" id="closeQuickViewBtn">
-
-            </button>
-            <a href="" class="btn-primary" id="viewDetailsBtn">
-
-            </a>
-            <a href="" class="btn-secondary" id="editMilestoneBtn">
-
-            </a>
-        </div>
     </div>
-    </div>
-
-
 </body>
 
 </html>

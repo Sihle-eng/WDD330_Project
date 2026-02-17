@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
     setupNavigation();
 
     // ===== 2. DASHBOARD SPECIFIC (only if on dashboard page) =====
-    if (document.getElementById('welcome-message')) {
+    if (document.querySelector('.welcome-card')) {
         console.log('Dashboard detected – loading dashboard data');
         loadDashboardData();
 
@@ -32,8 +32,19 @@ document.addEventListener('DOMContentLoaded', function () {
         SearchFilter.init();
     }
 
-    // ===== 4. LEGACY NOTIFICATION CHECK (optional, can be removed later) =====
-    // Uses browser Notification API – separate from reminder-scheduler.
+    // ===== 4. LOGOUT HANDLER =====
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function (e) {
+            e.preventDefault(); // Important in case it's inside a form
+            console.log('Logout clicked');
+            Auth.logout();      // Calls the logout method from auth.js
+        });
+    } else {
+        console.warn('Logout button not found');
+    }
+
+    // ===== 5. LEGACY NOTIFICATION CHECK =====
     setTimeout(checkForNotifications, 2000);
 });
 
@@ -144,53 +155,64 @@ function updateRecentMilestones() {
     const timelinePreview = document.getElementById('timeline-preview');
     if (!timelinePreview) return;
 
-    const milestones = Storage.getAllMilestones();
+    try {
+        const milestones = Storage.getAllMilestones();
 
-    if (milestones.length === 0) {
-        timelinePreview.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-heart"></i>
-                <p>Your love story begins here!</p>
-                <p class="hint">Add your first milestone to start tracking your journey</p>
-                <a href="add-milestone.html" class="btn-primary">
-                    <i class="fas fa-plus"></i> Add First Milestone
-                </a>
-            </div>
-        `;
-        return;
-    }
+        if (milestones.length === 0) {
+            timelinePreview.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-heart"></i>
+                    <p>Your love story begins here!</p>
+                    <p class="hint">Add your first milestone to start tracking your journey</p>
+                    <a href="add-milestone.html" class="btn-primary">
+                        <i class="fas fa-plus"></i> Add First Milestone
+                    </a>
+                </div>
+            `;
+            return;
+        }
 
-    const sortedMilestones = [...milestones]
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
-        .slice(0, 5);
+        const sortedMilestones = [...milestones]
+            .sort((a, b) => new Date(b.date) - new Date(a.date))
+            .slice(0, 5);
 
-    let html = '<div class="timeline-items">';
-    sortedMilestones.forEach((milestone, index) => {
-        html += `
-            <div class="timeline-item ${index % 2 === 0 ? 'left' : 'right'}">
-                <div class="timeline-content">
-                    <div class="timeline-date">${formatDate(milestone.date)}</div>
-                    <div class="timeline-title">${milestone.title}</div>
-                    <div class="timeline-category">
-                        <span class="category-badge ${milestone.category}">
-                            <i class="fas ${getCategoryIcon(milestone.category)}"></i>
-                            ${capitalize(milestone.category)}
-                        </span>
-                    </div>
-                    <div class="timeline-actions">
-                        <a href="milestone-detail.html?id=${milestone.id}" class="btn-text">
-                            View Details <i class="fas fa-arrow-right"></i>
-                        </a>
-                        <a href="add-milestone.html?edit=${milestone.id}" class="btn-icon">
-                            <i class="fas fa-edit"></i>
-                        </a>
+        let html = '<div class="timeline-items">';
+        sortedMilestones.forEach((milestone, index) => {
+            html += `
+                <div class="timeline-item ${index % 2 === 0 ? 'left' : 'right'}">
+                    <div class="timeline-content">
+                        <div class="timeline-date">${formatDate(milestone.date)}</div>
+                        <div class="timeline-title">${milestone.title}</div>
+                        <div class="timeline-category">
+                            <span class="category-badge ${milestone.category}">
+                                <i class="fas ${getCategoryIcon(milestone.category)}"></i>
+                                ${capitalize(milestone.category)}
+                            </span>
+                        </div>
+                        <div class="timeline-actions">
+                            <a href="milestone-detail.html?id=${milestone.id}" class="btn-text">
+                                View Details <i class="fas fa-arrow-right"></i>
+                            </a>
+                            <a href="add-milestone.html?edit=${milestone.id}" class="btn-icon">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
+            `;
+        });
+        html += '</div>';
+        timelinePreview.innerHTML = html;
+    } catch (error) {
+        console.error('Error in updateRecentMilestones:', error);
+        timelinePreview.innerHTML = `
+            <div class="error-state">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Something went wrong loading your milestones.</p>
+                <button onclick="location.reload()" class="btn-text">Try Again</button>
             </div>
         `;
-    });
-    html += '</div>';
-    timelinePreview.innerHTML = html;
+    }
 }
 
 function updateStatistics() {
@@ -258,7 +280,7 @@ function setupNavigation() {
 
 function handleStorageUpdate(event) {
     console.log('Storage updated, refreshing dashboard...');
-    if (document.getElementById('welcome-message')) {
+    if (document.querySelector('.welcome-card')) {
         loadDashboardData();
     }
 }
@@ -359,7 +381,7 @@ function deleteAllMilestones() {
 }
 
 // =========================================================================
-// LEGACY NOTIFICATION FUNCTIONS (can be removed if reminder-scheduler is used)
+// LEGACY NOTIFICATION FUNCTIONS
 // =========================================================================
 
 function checkForNotifications() {
@@ -399,7 +421,7 @@ function showNotification(message) {
 }
 
 // =========================================================================
-// SEARCH & FILTER MODULE – only active on pages with #searchInput
+// SEARCH & FILTER MODULE
 // =========================================================================
 
 const SearchFilter = {
@@ -753,4 +775,5 @@ window.LoveLine = {
     importData,
     deleteAllMilestones,
     SearchFilter
+    // Note: logout is handled by Auth, not exposed here
 };
