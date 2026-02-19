@@ -1,4 +1,4 @@
-// ===== LOCAL STORAGE MODULE (with multi‑user support) =====
+// LOCAL STORAGE MODULE (with multi‑user support) 
 const Storage = {
     // Base keys (without username)
     KEYS: {

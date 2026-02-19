@@ -1,4 +1,3 @@
-// ===== NOTIFICATION SYSTEM =====
 // Unified notification module – use Notifications for all new code
 
 const Notifications = {

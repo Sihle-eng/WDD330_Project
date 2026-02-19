@@ -1,4 +1,3 @@
-// reminder-scheduler.js
 // Checks for due reminders and triggers notifications
 
 const ReminderScheduler = {

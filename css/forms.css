@@ -1,12 +1,12 @@
 :root {
-    /* Primary colors based on the pink theme (#e75480) */
+
     --primary-color: #e75480;
     --primary-light: #f09bb7;
     --primary-dark: #c43a60;
     --secondary-color: #6c5ce7;
-    /* purple accent from back-link */
+
     --accent-color: #f39c12;
-    /* gold/orange for high significance */
+
 
     /* Text colors */
     --text-primary: #2d3436;

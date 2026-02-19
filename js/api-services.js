@@ -1,5 +1,3 @@
-// api-services.js
-// ================
 // Handles all external API integrations
 
 const CONFIG = {

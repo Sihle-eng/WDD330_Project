@@ -1,5 +1,3 @@
-// utils.js – shared utility functions
-
 function applyTheme(theme) {
     const root = document.documentElement;
     const themes = {

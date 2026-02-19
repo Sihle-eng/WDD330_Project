@@ -1,5 +1,3 @@
-// settings.js (simplified)
-
 document.addEventListener('DOMContentLoaded', () => {
     loadSettings();
     document.getElementById('settingsForm').addEventListener('submit', saveSettings);

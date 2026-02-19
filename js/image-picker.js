@@ -1,5 +1,5 @@
-// image-picker.js
-// ================
+
+//Import dependencies 
 
 import { fetchUnsplashImages, getImageAttribution } from './api-services.js';
 

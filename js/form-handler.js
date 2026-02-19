@@ -1,4 +1,4 @@
-// ===== FORM HANDLER MODULE =====
+//FORM HANDLER MODULE
 const FormHandler = {
     // Form state
     formState: {
@@ -8,7 +8,7 @@ const FormHandler = {
         lastSavedId: null,
         backgroundImage: null,
         imageAttribution: '',
-        photos: [] // 🆕 Store selected photos (as File objects or data URLs)
+        photos: [] // Store selected photos 
     },
 
     // Initialize form

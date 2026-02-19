@@ -1,4 +1,4 @@
-// ===== DETAIL PAGE HANDLER =====
+//  DETAIL PAGE HANDLER 
 const DetailHandler = {
     // State
     state: {

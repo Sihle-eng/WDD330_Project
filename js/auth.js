@@ -1,4 +1,4 @@
-// auth.js – User authentication with password validation
+// User authentication with password validation
 
 const Auth = {
     CURRENT_USER_KEY: 'loveline_currentUser',

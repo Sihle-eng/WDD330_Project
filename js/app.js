@@ -1,4 +1,3 @@
-// ===== app.js – LoveLine Global Application Script =====
 // Single entry point – no duplicate listeners, no stray code.
 
 document.addEventListener('DOMContentLoaded', function () {

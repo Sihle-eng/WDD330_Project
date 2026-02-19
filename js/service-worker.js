@@ -1,4 +1,4 @@
-// ===== SERVICE WORKER FOR PUSH NOTIFICATIONS =====
+// SERVICE WORKER FOR PUSH NOTIFICATIONS
 
 const CACHE_NAME = 'loveline-v1';
 const urlsToCache = [

@@ -1,4 +1,3 @@
-// gallery.js
 // Handles photo gallery for a specific milestone
 
 class PhotoGallery {
